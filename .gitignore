@@ -1,0 +1,6 @@
+/.venv
+.env
+*.db
+keys.txt
+notes.txt
+chars.txt

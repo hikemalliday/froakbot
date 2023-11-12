@@ -61,8 +61,9 @@ async def get_players_db(message: dict) -> str:
             c = conn.cursor()
             c.execute("""SELECT * FROM Players_db""")
             results = c.fetchall()
+            sorted_results = sorted(results, key=lambda result: result[0])
             results_string = ""
-            for result in results:
+            for result in sorted_results:
                 results_string += (
                     str(result)
                     .replace("'", "")
@@ -87,8 +88,9 @@ async def get_players_db(message: dict) -> str:
             c = conn.cursor()
             c.execute("""SELECT * FROM Players_db WHERE guild = ?""", (guild,))
             results = c.fetchall()
+            sorted_results = sorted(results, key=lambda result: result[0])
             results_string = ""
-            for result in results:
+            for result in sorted_results:
                 results_string += (
                     str(result)
                     .replace("'", "")
@@ -100,6 +102,11 @@ async def get_players_db(message: dict) -> str:
                 )
                 results_string += "\n"
             print(results_string)
+            if len(results_string) > 1994:
+                for i in range(0, len(results_string), 1994):
+                    chunk = results_string[i : i + 1994]
+                    chunk = "```" + chunk + "```"
+                    await message.channel.send(chunk)
             return "```" + results_string + "```"
         except Exception as e:
             print(e)
@@ -155,8 +162,8 @@ async def get_characters_db(message: dict) -> str:
         return str(e)
     finally:
         conn.close()
-
-    for result in results:
+    sorted_results = sorted(results, key=lambda result: result[0])
+    for result in sorted_results:
         char_name, char_class, player_name, level = result
         row = f"{char_name}, {char_class}, {player_name}, {level}"
         results_string += row + "\n"
@@ -179,10 +186,15 @@ async def add_char(message: dict) -> str:
         return await responses.invalid_input(message, "!add_char")
 
     char_name, char_class, player_name, level = character_info
+    char_name = char_name.title()
+    char_class = char_class.title()
+    player_name = player_name.title()
+    level = int(level)
+
     if char_class == "Mage":
         char_class = "Magician"
-    if char_class =='ShadowKnight':
-        char_class = 'Shadowknight'
+    if char_class == "ShadowKnight":
+        char_class = "Shadowknight"
 
     try:
         conn = sqlite3.connect("./master.db")
@@ -225,7 +237,9 @@ async def add_player(message: dict) -> str:
         return await responses.invalid_input(message, "!add_player")
 
     player_name, relation, guild = character_info
+    player_name = player_name.title()
     relation = int(relation)
+    guild = guild.title()
 
     if relation not in (0, 1, 2):
         return '```Invalid "relation" field. Must be 0, 1, or 2```'
@@ -255,6 +269,7 @@ async def delete_char(message: dict) -> str:
         return await responses.invalid_input(message, "!delete_player")
 
     char_name = message.content.split()[1:][0]
+    char_name = char_name.title()
 
     try:
         conn = sqlite3.connect("./master.db")
@@ -279,6 +294,7 @@ async def delete_player(message: dict) -> str:
         return await responses.invalid_input(message, "!delete_player")
 
     player_name = message.content.split()[1:][0]
+    player_name = player_name.title()
 
     try:
         conn = sqlite3.connect("./master.db")
@@ -306,7 +322,11 @@ async def edit_char(message: dict) -> str:
         return await responses.invalid_input(message, "!edit_char")
 
     char_name_old, char_name_new, char_class, player_name, level = character_info
+    char_name_old = char_name_old.title()
+    char_name_new = char_name_new.title()
+    player_name = player_name.title()
     level = int(level)
+
     if char_class == "Mage":
         char_class = "Magician"
 
@@ -349,7 +369,10 @@ async def edit_player(message: dict) -> str:
         return await responses.invalid_input(message, "!edit_char")
 
     player_name_old, player_name_new, relation, guild = character_info
+    player_name_old = player_name_old.title()
+    player_name_new = player_name_new.title()
     relation = int(relation)
+    guild = guild.title()
 
     if type(relation) != int:
         return '```error, "relation" must be of type int```'
@@ -385,6 +408,8 @@ async def edit_player(message: dict) -> str:
 
 async def who(message: dict) -> str:
     char_name = message.content.split()[1:][0]
+    char_name = char_name.title()
+
     try:
         conn = sqlite3.connect("./master.db")
         c = conn.cursor()
@@ -424,6 +449,8 @@ async def who(message: dict) -> str:
 
 async def get_chars(message: dict) -> str:
     player_name = message.content[11:].strip()
+    player_name = player_name.title()
+
     try:
         conn = sqlite3.connect("./master.db")
         c = conn.cursor()
@@ -431,14 +458,21 @@ async def get_chars(message: dict) -> str:
             """SELECT * FROM Characters_db WHERE player_name = ?""", (player_name,)
         )
         results = c.fetchall()
+        sorted_results = sorted(results, key=lambda result: result[0])
+
         formatted_characters = ""
-        for result in results:
+        for result in sorted_results:
             char_name, char_class, player_name, level = result
             row = f"Character: {char_name}, Class: {char_class}, Player: {player_name}, Level: {level}"
             formatted_characters += row
             formatted_characters += "\n"
-
-        return "```" + formatted_characters + "```"
+        if len(formatted_characters) > 1994:
+            for i in range(0, len(formatted_characters), 1994):
+                chunk = formatted_characters[i : i + 1994]
+                chunk = "```" + chunk + "```"
+                await message.channel.send(chunk)
+        else:
+            return "```" + formatted_characters + "```"
 
     except Exception as e:
         print(e)
@@ -451,21 +485,34 @@ async def parse_image(extracted_text: str):
     pattern = r"\[[^\]]+\] ([^\s<]+)"
     # pattern = r"\[[^\]]+\] ([^\n<]+)"
     char_names = re.findall(pattern, extracted_text)
-    print(char_names)
+
     for i in range(len(char_names)):
-        char_names[i] = char_names[i].strip().replace(".", "").replace(",","").replace("'", "")
+        original_name = char_names[i]
+        char_name = original_name.strip()  # Remove leading and trailing whitespace
+        char_name = (
+            char_name.replace(".", "")
+            .replace(",", "")
+            .replace("'", "")
+            .replace("’", "")
+        )  # Replace other characters as needed
+        char_names[i] = char_name
+        print("Original:", original_name)
+        print("Modified:", char_names[i])
+
+        if char_names[i] in ("Yuu", "Yuuy", "Yuuv"):
+            char_names[i] = "Yuuvy"
 
     try:
         conn = sqlite3.connect("./master.db")
         c = conn.cursor()
-        placeholders = ','.join(['?'] * len(char_names))
+        placeholders = ",".join(["?"] * len(char_names))
         query = f"""SELECT a.char_name, a.char_class, a.player_name, a.level, b.relation 
             FROM Characters_db a INNER JOIN Players_db b 
             ON a.player_name = b.player_name 
             WHERE char_name IN ({placeholders})"""
 
         c.execute(query, char_names)
-        print('test2')
+        print("test2")
         results = c.fetchall()
 
         formatted_string = ""
@@ -479,9 +526,9 @@ async def parse_image(extracted_text: str):
         unknown_count = 0
         friendly_class_comp = {}
         enemy_class_comp = {}
-        
 
         for result in results:
+            result = list(result)
             char_name, char_class, player_name, level, relation = result
             if relation == 0:
                 enemy_chars.append([char_name, char_class, level])
@@ -490,15 +537,13 @@ async def parse_image(extracted_text: str):
                 friendly_chars.append([char_name, char_class, level])
                 friendly_char_names.append(char_name)
 
-
-
         # Find the 'Unknown' characters:
+
         for char in char_names:
-            print(char)
             if char not in friendly_char_names and char not in enemy_char_names:
                 unknown_count += 1
                 unknown_char_names.append(char)
-        
+
         enemy_chars.sort(key=lambda x: x[1])
         friendly_chars.sort(key=lambda x: x[1])
 
@@ -506,46 +551,32 @@ async def parse_image(extracted_text: str):
         for char in enemy_chars:
             formatted_string += f"""```ansi
 {char[0]}: [0;31;40m{char[1]}```"""
-            
 
         for char in friendly_chars:
             formatted_string += f"""```ansi
 {char[0]}: [0;36;40m{char[1]}```"""
-            
 
         for char in unknown_char_names:
             formatted_string += f"""```ansi
 {char}: [0;37;40mUNKNOWN```"""
-            
 
         # Get the class comps:
-        for char in enemy_chars:
-            char_class = char[1]
-            enemy_count += 1
-            if char_class not in enemy_class_comp:
-                enemy_class_comp[char_class] = 1
-            else:
-                enemy_class_comp[char_class] += 1
+        # for char in enemy_chars:
+        #     char_class = char[1]
+        #     enemy_count += 1
+        #     if char_class not in enemy_class_comp:
+        #         enemy_class_comp[char_class] = 1
+        #     else:
+        #         enemy_class_comp[char_class] += 1
 
-        for char in friendly_chars:
-            char_class = char[1]
-            friendly_count += 1
-            if char_class not in friendly_class_comp:
-                friendly_class_comp[char_class] = 1
-            else:
-                friendly_class_comp[char_class] += 1
+        # for char in friendly_chars:
+        #     char_class = char[1]
+        #     friendly_count += 1
+        #     if char_class not in friendly_class_comp:
+        #         friendly_class_comp[char_class] = 1
+        #     else:
+        #         friendly_class_comp[char_class] += 1
 
-        # formatted_string += "enemy count: " + str(enemy_count) + "\n"
-        # for char_class, count in enemy_class_comp.items():
-        #     formatted_string += char_class + ":" + str(count) + "\n"
-
-        # formatted_string += "friendly count: " + str(friendly_count) + "\n"
-        # for char_class, count in friendly_class_comp.items():
-        #     formatted_string += char_class + ":" + str(count) + "\n"
-
-        # formatted_string += "unknown count: " + str(unknown_count)
-        
-        print(formatted_string)
         return formatted_string
     except Exception as e:
         print(e)

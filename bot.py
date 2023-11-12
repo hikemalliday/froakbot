@@ -2,9 +2,9 @@ import discord
 import database
 import imageprocessing
 from decouple import config
+import responses
 
 TOKEN = config("BOT_TOKEN")
-
 
 
 def run_discord_bot():
@@ -12,8 +12,12 @@ def run_discord_bot():
     intents.message_content = True
     client = discord.Client(intents=intents)
     database.create_tables()
-    allowed_roles = ["Brain Trust", "Admin", "Froak"]  # Roles that are allowed to use the command
-    
+    allowed_roles = [
+        "Brain Trust",
+        "Admin",
+        "Froak",
+    ]  # Roles that are allowed to use the command
+
     @client.event
     async def on_ready():
         print(f"{client.user} is now running!")
@@ -37,6 +41,7 @@ def run_discord_bot():
             "!chars_db": database.get_characters_db,
             "!characters_db": database.get_characters_db,
             "!snip": imageprocessing.parse_image,
+            "!commands": responses.get_commands,
         }
 
         # Parse the command:

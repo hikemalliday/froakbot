@@ -17,9 +17,12 @@ async def parse_image(message: dict) -> str:
             if attachment.width and attachment.height:
                 image_raw = await attachment.read()
                 image = Image.open(BytesIO(image_raw))
-
+                print(image)
                 if server_side:
-                    pytesseract.pytesseract.tesseract_cmd = r"/usr/bin/pytesseract"
+                    print("server_side boolean")
+                    pytesseract.pytesseract.tesseract_cmd = (
+                        r"/home/grixus/froakbot/.venv/bin/pytesseract"
+                    )
 
                 extracted_text = pytesseract.image_to_string(image)
                 print("Extracted Text:", extracted_text)

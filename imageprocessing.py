@@ -18,11 +18,10 @@ async def parse_image(message: dict) -> str:
                 image_raw = await attachment.read()
                 image = Image.open(BytesIO(image_raw))
                 print(image)
+
                 if server_side:
                     print("server_side boolean")
-                    pytesseract.pytesseract.tesseract_cmd = (
-                        r"/home/grixus/froakbot/.venv/bin/pytesseract"
-                    )
+                    pytesseract.pytesseract.tesseract_cmd = r"/usr/bin/tesseract"
 
                 extracted_text = pytesseract.image_to_string(image)
                 print("Extracted Text:", extracted_text)

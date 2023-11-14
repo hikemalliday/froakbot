@@ -16,7 +16,7 @@ def run_discord_bot():
         "Brain Trust",
         "Admin",
         "Froak",
-    ]  # Roles that are allowed to use the command
+    ] 
 
     @client.event
     async def on_ready():

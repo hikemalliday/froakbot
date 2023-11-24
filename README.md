@@ -1,5 +1,5 @@
 # froakbot
-###### A Discord bot for Project1999: Red
+###### A Discord bot for Everquest (an MMORPG)
 
 The discord bot parses a snip of the character names in a zone:
 

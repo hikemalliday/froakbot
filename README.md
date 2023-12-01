@@ -18,5 +18,5 @@ Also contains basic CRUD commands for search of character data.
 Created in Python. The bot reads / writes to a local SQLite database. The image parsing library used is Pytesseract.
 I built it so that my guildmates can assess the class composition of an enemy force, before charging into battle (we play on a PvP server).
 
-I find that the Discord.Py (the library I used to create the bot) Is quite easy to dev with. The Discord API is easy to use.
+I find that the Discord.Py (the library I used to create the bot) Is quite easy to dev with. The Discord API is easy to use. I get a lot of value / use out of this bot, as do my guildmates.
 

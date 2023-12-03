@@ -17,14 +17,13 @@ async def parse_image(message: dict) -> str:
             if attachment.width and attachment.height:
                 image_raw = await attachment.read()
                 image = Image.open(BytesIO(image_raw))
-                print(image)
+                # print(image)
 
                 if server_side:
-                    print("server_side boolean")
                     pytesseract.pytesseract.tesseract_cmd = r"/usr/bin/tesseract"
 
                 extracted_text = pytesseract.image_to_string(image)
-                print("Extracted Text:", extracted_text)
-                database_results = await database.parse_image(extracted_text)
-                await message.channel.send(database_results)
+                # print("Extracted Text:", extracted_text)
+                database_results = await database.parse_image(extracted_text, message)
+                # await message.channel.send(database_results)
                 return

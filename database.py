@@ -3,22 +3,39 @@ import responses
 import re
 
 char_classes = [
-    "Enchanter",
-    "Magician",
-    "Necromancer",
-    "Wizard",
+    "Bard",
     "Cleric",
     "Druid",
-    "Shaman",
-    "Bard",
+    "Enchanter",
+    "Magician",
     "Monk",
+    "Necromancer",
+    "Paladin",
     "Ranger",
     "Rogue",
-    "Tanks",
-    "Paladin",
     "Shadowknight",
+    "Shaman",
+    "Tanks",
     "Warrior",
+    "Wizard",
 ]
+
+char_class_emojis = {
+    'Bard': '🎵',
+    'Cleric': '❤️',
+    'Druid':  '🐺',
+    'Enchanter': '🧙',
+    'Magician': '🪄',
+    'Monk': '🥋',
+    'Necromancer': '😈',
+    'Paladin': '🛡️',
+    'Ranger': '🏹',
+    'Rogue': '🗡️',
+    'Shadowknight': '☠️',
+    'Shaman': '🤢',
+    'Warrior': '⚔️',
+    'Wizard': '🔥'
+}
 
 guilds = ["Tempest", "Pumice", "Sanctuary", "Serenity", "Guildless"]
 
@@ -481,24 +498,21 @@ async def get_chars(message: dict) -> str:
         conn.close()
 
 
-async def parse_image(extracted_text: str):
+async def parse_image(extracted_text: str, message: dict):
     pattern = r"\[[^\]]+\] ([^\s<]+)"
-    # pattern = r"\[[^\]]+\] ([^\n<]+)"
+
     char_names = re.findall(pattern, extracted_text)
 
     for i in range(len(char_names)):
         original_name = char_names[i]
-        char_name = original_name.strip()  # Remove leading and trailing whitespace
+        char_name = original_name.strip()
         char_name = (
             char_name.replace(".", "")
             .replace(",", "")
             .replace("'", "")
             .replace("’", "")
-        )  # Replace other characters as needed
+        )
         char_names[i] = char_name
-        print("Original:", original_name)
-        print("Modified:", char_names[i])
-
         if char_names[i] in ("Yuu", "Yuuy", "Yuuv"):
             char_names[i] = "Yuuvy"
 
@@ -512,9 +526,7 @@ async def parse_image(extracted_text: str):
             WHERE char_name IN ({placeholders})"""
 
         c.execute(query, char_names)
-        print("test2")
         results = c.fetchall()
-
         formatted_string = ""
         friendly_chars = []
         friendly_char_names = []
@@ -538,7 +550,6 @@ async def parse_image(extracted_text: str):
                 friendly_char_names.append(char_name)
 
         # Find the 'Unknown' characters:
-
         for char in char_names:
             if char not in friendly_char_names and char not in enemy_char_names:
                 unknown_count += 1
@@ -547,37 +558,64 @@ async def parse_image(extracted_text: str):
         enemy_chars.sort(key=lambda x: x[1])
         friendly_chars.sort(key=lambda x: x[1])
 
-        # Construct the output string:
         for char in enemy_chars:
+            print(char_class_emojis[char[1]])
             formatted_string += f"""```ansi
-{char[0]}: [0;31;40m{char[1]}```"""
+{char[0]}: [0;31;40m{char[1]}{char_class_emojis[char[1]]}```"""
 
         for char in friendly_chars:
+            print(char_class_emojis[char[1]])
             formatted_string += f"""```ansi
-{char[0]}: [0;36;40m{char[1]}```"""
+{char[0]}: [0;36;40m{char[1]}{char_class_emojis[char[1]]}```"""
 
         for char in unknown_char_names:
             formatted_string += f"""```ansi
 {char}: [0;37;40mUNKNOWN```"""
 
         # Get the class comps:
-        # for char in enemy_chars:
-        #     char_class = char[1]
-        #     enemy_count += 1
-        #     if char_class not in enemy_class_comp:
-        #         enemy_class_comp[char_class] = 1
-        #     else:
-        #         enemy_class_comp[char_class] += 1
+        for char in enemy_chars:
+            char_class = char[1]
+            enemy_count += 1
+            if char_class not in enemy_class_comp:
+                enemy_class_comp[char_class] = 1
+            else:
+                enemy_class_comp[char_class] += 1
 
-        # for char in friendly_chars:
-        #     char_class = char[1]
-        #     friendly_count += 1
-        #     if char_class not in friendly_class_comp:
-        #         friendly_class_comp[char_class] = 1
-        #     else:
-        #         friendly_class_comp[char_class] += 1
+        for char in friendly_chars:
+            char_class = char[1]
+            friendly_count += 1
+            if char_class not in friendly_class_comp:
+                friendly_class_comp[char_class] = 1
+            else:
+                friendly_class_comp[char_class] += 1
 
-        return formatted_string
+        # Send char + class list:
+        print(len(formatted_string))
+        if len(formatted_string) > 1994:
+            for i in range(0, len(formatted_string), 1994):
+                chunk = formatted_string[i : i + 1994]
+                chunk = "```" + chunk + "```"
+                await message.channel.send(chunk)
+        else:        
+             await message.channel.send(formatted_string)
+       
+        formatted_string = """ \n """
+        formatted_string += f"""**Enemy Classes:** \n"""
+
+        for char_class, count in sorted(
+            enemy_class_comp.items(), key=lambda x: x[1], reverse=True
+        ):
+            formatted_string += f"""```{char_class} {char_class_emojis[char_class]}: {count}```"""
+
+        formatted_string += f"""**Friendly Classes:** \n"""
+
+        for char_class, count in sorted(
+            friendly_class_comp.items(), key=lambda x: x[1], reverse=True
+        ):
+            formatted_string += f"""```{char_class} {char_class_emojis[char_class]}: {count}```"""
+        
+        # Send class comp count
+        await message.channel.send(formatted_string)
     except Exception as e:
         print(e)
         return str(e)

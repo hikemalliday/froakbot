@@ -6,3 +6,4 @@ notes.txt
 chars.txt
 /__pycache__
 requirements.txt
+.prettierignore

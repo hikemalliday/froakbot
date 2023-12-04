@@ -1,6 +1,7 @@
 import sqlite3
 import responses
 import re
+import config
 
 char_classes = [
     "Bard",
@@ -25,7 +26,7 @@ char_class_emojis = {
     'Cleric': '❤️',
     'Druid':  '🐺',
     'Enchanter': '🧙',
-    'Magician': '🪄',
+    'Magician': '🔮',
     'Monk': '🥋',
     'Necromancer': '😈',
     'Paladin': '🛡️',
@@ -55,7 +56,7 @@ def create_tables():
     )"""
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute(sql_Players_db)
         c.execute(sql_Characters_db)
@@ -74,7 +75,7 @@ async def get_players_db(message: dict) -> str:
     message.content = message.content.split()[1:]
     if message.content == []:
         try:
-            conn = sqlite3.connect("./master.db")
+            conn = sqlite3.connect(config.db_path)
             c = conn.cursor()
             c.execute("""SELECT * FROM Players_db""")
             results = c.fetchall()
@@ -101,7 +102,7 @@ async def get_players_db(message: dict) -> str:
     else:
         try:
             guild = message.content[0]
-            conn = sqlite3.connect("./master.db")
+            conn = sqlite3.connect(config.db_path)
             c = conn.cursor()
             c.execute("""SELECT * FROM Players_db WHERE guild = ?""", (guild,))
             results = c.fetchall()
@@ -150,7 +151,7 @@ async def get_characters_db(message: dict) -> str:
                 guild = param
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
 
         if char_class and guild:
@@ -214,7 +215,7 @@ async def add_char(message: dict) -> str:
         char_class = "Shadowknight"
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
 
         c.execute("SELECT * FROM Players_db WHERE player_name = ?", (player_name,))
@@ -262,7 +263,7 @@ async def add_player(message: dict) -> str:
         return '```Invalid "relation" field. Must be 0, 1, or 2```'
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute(
             """INSERT INTO Players_db (player_name, relation, guild) VALUES (?, ?, ?)""",
@@ -289,7 +290,7 @@ async def delete_char(message: dict) -> str:
     char_name = char_name.title()
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute("""DELETE FROM Characters_db WHERE char_name = ?""", (char_name,))
         conn.commit()
@@ -314,7 +315,7 @@ async def delete_player(message: dict) -> str:
     player_name = player_name.title()
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute("""DELETE FROM Players_db WHERE player_name = ?""", (player_name,))
         conn.commit()
@@ -351,7 +352,7 @@ async def edit_char(message: dict) -> str:
         return '```error, "level" must be of type int```'
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute(
             """SELECT * FROM Characters_db WHERE char_name = ?""", (char_name_old,)
@@ -395,7 +396,7 @@ async def edit_player(message: dict) -> str:
         return '```error, "relation" must be of type int```'
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute(
             """SELECT * FROM Players_db WHERE player_name = ?""", (player_name_old,)
@@ -428,7 +429,7 @@ async def who(message: dict) -> str:
     char_name = char_name.title()
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute("""SELECT * FROM Characters_db WHERE char_name = ?""", (char_name,))
         results = c.fetchone()
@@ -469,7 +470,7 @@ async def get_chars(message: dict) -> str:
     player_name = player_name.title()
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute(
             """SELECT * FROM Characters_db WHERE player_name = ?""", (player_name,)
@@ -517,7 +518,7 @@ async def parse_image(extracted_text: str, message: dict):
             char_names[i] = "Yuuvy"
 
     try:
-        conn = sqlite3.connect("./master.db")
+        conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         placeholders = ",".join(["?"] * len(char_names))
         query = f"""SELECT a.char_name, a.char_class, a.player_name, a.level, b.relation 
@@ -605,7 +606,8 @@ async def parse_image(extracted_text: str, message: dict):
         for char_class, count in sorted(
             enemy_class_comp.items(), key=lambda x: x[1], reverse=True
         ):
-            formatted_string += f"""```{char_class} {char_class_emojis[char_class]}: {count}```"""
+            formatted_string += f"""```ansi 
+            [0;36;40m{char_class}{char_class_emojis[char_class]}: {count}```"""
 
         formatted_string += f"""**Friendly Classes:** \n"""
 

@@ -54,8 +54,9 @@ def create_tables():
                             player_name text,
                             level integer                     
     )"""
-
+    print('config.db_path debug: ' + config.db_path)
     try:
+        
         conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute(sql_Players_db)

@@ -2,7 +2,7 @@
 ###### A Discord bot for Everquest (an MMORPG)
 
 ##### Docker Hub:
-[https://www.google.com](https://hub.docker.com/repository/docker/hikemalliday/froakbot/general)
+[https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/repository/docker/hikemalliday/froakbot/general)]
 
 The discord bot parses a snip of the character names in a zone:
 

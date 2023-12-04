@@ -8,4 +8,3 @@ chars.txt
 requirements.txt
 .prettierignore
 ./froak-db
-config.py

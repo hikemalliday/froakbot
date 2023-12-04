@@ -2,6 +2,10 @@ import sqlite3
 import responses
 import re
 import config
+import os
+
+current_working_dir = os.getcwd()
+print("Current Working Directory:", current_working_dir)
 
 char_classes = [
     "Bard",
@@ -56,7 +60,6 @@ def create_tables():
     )"""
     print('config.db_path debug: ' + config.db_path)
     try:
-        
         conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
         c.execute(sql_Players_db)

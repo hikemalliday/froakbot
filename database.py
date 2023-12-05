@@ -3,44 +3,45 @@ import responses
 import re
 import config
 import os
+import char_classes
 
 current_working_dir = os.getcwd()
 print("Current Working Directory:", current_working_dir)
 
-char_classes = [
-    "Bard",
-    "Cleric",
-    "Druid",
-    "Enchanter",
-    "Magician",
-    "Monk",
-    "Necromancer",
-    "Paladin",
-    "Ranger",
-    "Rogue",
-    "Shadowknight",
-    "Shaman",
-    "Tanks",
-    "Warrior",
-    "Wizard",
-]
+# char_classes = [
+#     "Bard",
+#     "Cleric",
+#     "Druid",
+#     "Enchanter",
+#     "Magician",
+#     "Monk",
+#     "Necromancer",
+#     "Paladin",
+#     "Ranger",
+#     "Rogue",
+#     "Shadowknight",
+#     "Shaman",
+#     "Tanks",
+#     "Warrior",
+#     "Wizard",
+# ]
 
-char_class_emojis = {
-    'Bard': '🎵',
-    'Cleric': '❤️',
-    'Druid':  '🐺',
-    'Enchanter': '🧙',
-    'Magician': '🔮',
-    'Monk': '🥋',
-    'Necromancer': '😈',
-    'Paladin': '🛡️',
-    'Ranger': '🏹',
-    'Rogue': '🗡️',
-    'Shadowknight': '☠️',
-    'Shaman': '🤢',
-    'Warrior': '⚔️',
-    'Wizard': '🔥'
-}
+# char_class_emojis = {
+#     'Bard': '🎵',
+#     'Cleric': '❤️',
+#     'Druid':  '🐺',
+#     'Enchanter': '🧙',
+#     'Magician': '🔮',
+#     'Monk': '🥋',
+#     'Necromancer': '😈',
+#     'Paladin': '🛡️',
+#     'Ranger': '🏹',
+#     'Rogue': '🗡️',
+#     'Shadowknight': '☠️',
+#     'Shaman': '🤢',
+#     'Warrior': '⚔️',
+#     'Wizard': '🔥'
+# }
 
 guilds = ["Tempest", "Pumice", "Sanctuary", "Serenity", "Guildless"]
 
@@ -149,7 +150,7 @@ async def get_characters_db(message: dict) -> str:
 
     if message.content:
         for param in message.content:
-            if param in char_classes:
+            if param in char_classes.class_names:
                 char_class = param
             if param in guilds:
                 guild = param
@@ -564,14 +565,14 @@ async def parse_image(extracted_text: str, message: dict):
         friendly_chars.sort(key=lambda x: x[1])
 
         for char in enemy_chars:
-            print(char_class_emojis[char[1]])
+            print(char_classes.emojis[char[1]])
             formatted_string += f"""```ansi
-{char[0]}: [0;31;40m{char[1]}{char_class_emojis[char[1]]}```"""
+{char[0]}: [0;31;40m{char[1]}{char_classes.emojis[char[1]]}```"""
 
         for char in friendly_chars:
-            print(char_class_emojis[char[1]])
+            print(char_classes.emojis[char[1]])
             formatted_string += f"""```ansi
-{char[0]}: [0;36;40m{char[1]}{char_class_emojis[char[1]]}```"""
+{char[0]}: [0;36;40m{char[1]}{char_classes.emojis[char[1]]}```"""
 
         for char in unknown_char_names:
             formatted_string += f"""```ansi
@@ -604,21 +605,23 @@ async def parse_image(extracted_text: str, message: dict):
         else:        
              await message.channel.send(formatted_string)
        
-        formatted_string = """ \n """
-        formatted_string += f"""**Enemy Classes:** \n"""
+        if enemy_class_comp:
+            formatted_string += f"""**Enemy Classes:** \n"""
 
-        for char_class, count in sorted(
-            enemy_class_comp.items(), key=lambda x: x[1], reverse=True
-        ):
-            formatted_string += f"""```ansi 
-            [0;36;40m{char_class}{char_class_emojis[char_class]}: {count}```"""
+            for char_class, count in sorted(
+                enemy_class_comp.items(), key=lambda x: x[1], reverse=True
+            ):
+                formatted_string += f"""```ansi 
+                [0;36;40m{char_class}{char_classes.emojis[char_class]}: {count}```"""
 
-        formatted_string += f"""**Friendly Classes:** \n"""
+        if friendly_class_comp:
+            
+            formatted_string += f"""**Friendly Classes:** \n"""
 
-        for char_class, count in sorted(
-            friendly_class_comp.items(), key=lambda x: x[1], reverse=True
-        ):
-            formatted_string += f"""```{char_class} {char_class_emojis[char_class]}: {count}```"""
+            for char_class, count in sorted(
+                friendly_class_comp.items(), key=lambda x: x[1], reverse=True
+            ):
+                formatted_string += f"""```{char_class} {char_classes.emojis[char_class]}: {count}```"""
         
         # Send class comp count
         await message.channel.send(formatted_string)

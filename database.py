@@ -59,7 +59,7 @@ def create_tables():
                             player_name text,
                             level integer                     
     )"""
-    print('config.db_path debug: ' + config.db_path)
+    print("config.db_path debug: " + config.db_path)
     try:
         conn = sqlite3.connect(config.db_path)
         c = conn.cursor()
@@ -602,26 +602,30 @@ async def parse_image(extracted_text: str, message: dict):
                 chunk = formatted_string[i : i + 1994]
                 chunk = "```" + chunk + "```"
                 await message.channel.send(chunk)
-        else:        
-             await message.channel.send(formatted_string)
-       
+        else:
+            await message.channel.send(formatted_string)
+
+        formatted_string = ""
         if enemy_class_comp:
             formatted_string += f"""**Enemy Classes:** \n"""
 
             for char_class, count in sorted(
                 enemy_class_comp.items(), key=lambda x: x[1], reverse=True
             ):
-                formatted_string += f"""```{char_class}{char_classes.emojis[char_class]}: {count}```"""
+                formatted_string += (
+                    f"""```{char_class}{char_classes.emojis[char_class]}: {count}```"""
+                )
 
         if friendly_class_comp:
-
             formatted_string += f"""**Friendly Classes:** \n"""
 
             for char_class, count in sorted(
                 friendly_class_comp.items(), key=lambda x: x[1], reverse=True
             ):
-                formatted_string += f"""```{char_class} {char_classes.emojis[char_class]}: {count}```"""
-        
+                formatted_string += (
+                    f"""```{char_class} {char_classes.emojis[char_class]}: {count}```"""
+                )
+
         # Send class comp count
         await message.channel.send(formatted_string)
     except Exception as e:

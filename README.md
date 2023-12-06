@@ -25,5 +25,5 @@ I find that Discord.Py (the library I used to create the bot) is quite easy to d
 
 #### Upon reflection:
 
-My initial thought process was, modulize all the function that interact with the database into their own file. Hence, 'database.py'. Well, almost all the methods interact with the database! Therefor, it would a poor choice / naming scheme. I intend to add more features to this bot eventually, and I will refactor the mehods / modules at that time.
+My initial thought process was, modulize all the function that interact with the database into their own file. Hence, 'database.py'. Well, almost all the methods interact with the database! Therefor, it was a poor choice / naming scheme. I intend to add more features to this bot eventually, and I will refactor the mehods / modules at that time. Overall, I am pleased with how clean the code turned out in terms of architcture.
 

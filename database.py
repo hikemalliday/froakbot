@@ -8,41 +8,6 @@ import char_classes
 current_working_dir = os.getcwd()
 print("Current Working Directory:", current_working_dir)
 
-# char_classes = [
-#     "Bard",
-#     "Cleric",
-#     "Druid",
-#     "Enchanter",
-#     "Magician",
-#     "Monk",
-#     "Necromancer",
-#     "Paladin",
-#     "Ranger",
-#     "Rogue",
-#     "Shadowknight",
-#     "Shaman",
-#     "Tanks",
-#     "Warrior",
-#     "Wizard",
-# ]
-
-# char_class_emojis = {
-#     'Bard': '🎵',
-#     'Cleric': '❤️',
-#     'Druid':  '🐺',
-#     'Enchanter': '🧙',
-#     'Magician': '🔮',
-#     'Monk': '🥋',
-#     'Necromancer': '😈',
-#     'Paladin': '🛡️',
-#     'Ranger': '🏹',
-#     'Rogue': '🗡️',
-#     'Shadowknight': '☠️',
-#     'Shaman': '🤢',
-#     'Warrior': '⚔️',
-#     'Wizard': '🔥'
-# }
-
 guilds = ["Tempest", "Pumice", "Sanctuary", "Serenity", "Guildless"]
 
 

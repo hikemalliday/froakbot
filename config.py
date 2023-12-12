@@ -1,4 +1,4 @@
-server_side = True
+server_side = False
 
 if server_side:
     tesseract = r"/usr/bin/tesseract"

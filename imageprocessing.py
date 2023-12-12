@@ -2,9 +2,9 @@ import pytesseract
 from PIL import Image
 from io import BytesIO
 import database
-from config import server_side
+from config import tesseract
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract"
+pytesseract.pytesseract.tesseract_cmd = tesseract
 
 
 async def parse_image(message: dict) -> str:
@@ -17,13 +17,7 @@ async def parse_image(message: dict) -> str:
             if attachment.width and attachment.height:
                 image_raw = await attachment.read()
                 image = Image.open(BytesIO(image_raw))
-                # print(image)
-
-                if server_side:
-                    pytesseract.pytesseract.tesseract_cmd = r"/usr/bin/tesseract"
 
                 extracted_text = pytesseract.image_to_string(image)
-                # print("Extracted Text:", extracted_text)
-                database_results = await database.parse_image(extracted_text, message)
-                # await message.channel.send(database_results)
+                await database.parse_image(extracted_text, message)
                 return

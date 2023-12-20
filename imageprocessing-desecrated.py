@@ -1,7 +1,9 @@
+# Consoldated into 'bot_command.py'
+
 import pytesseract
 from PIL import Image
 from io import BytesIO
-import database
+import bot_commands
 from config import tesseract
 
 pytesseract.pytesseract.tesseract_cmd = tesseract
@@ -17,7 +19,8 @@ async def parse_image(message: dict) -> str:
             if attachment.width and attachment.height:
                 image_raw = await attachment.read()
                 image = Image.open(BytesIO(image_raw))
+                image_url = attachment.url
 
                 extracted_text = pytesseract.image_to_string(image)
-                await database.parse_image(extracted_text, message)
+                await bot_commands.parse_image(extracted_text, message, image_url)
                 return

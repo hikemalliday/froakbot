@@ -7,4 +7,7 @@ chars.txt
 /__pycache__
 requirements.txt
 .prettierignore
-./froak-db
+/froak-db
+config.py
+database-revamp.py
+/mysql

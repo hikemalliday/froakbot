@@ -2,8 +2,9 @@ version: "3"
 
 services:
   bot:
-    image: hikemalliday/froakbot:dockerhub
+    #image: hikemalliday/froakbot:dockerhub
+    build: ./
     ports:
       - 8002:8000
     volumes:
-      - /home/grixus/docker-froakbot/froak-db/:/app/froak-db/
+      - /root/projects/froakbot/froak-db/:/app/froak-db/

@@ -18,7 +18,7 @@ Also contains basic CRUD commands for search of character data.
 
 # Dev Notes:
 
-I created a simple [website](https://www.github.com/hikemalliday/fraokbot-website-frontend/) that displays all of the discord bots output, in an endless scroll page.
+I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
 
 Created in Python. The bot reads / writes to a local SQLite database. The image parsing library used is Pytesseract.
 I built it so that my guildmates can assess the class composition of an enemy force, before charging into battle (we play on a PvP server).

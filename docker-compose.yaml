@@ -2,8 +2,7 @@ version: "3"
 
 services:
   bot:
-    build: .
-    # command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
+    image: hikemalliday/froakbot:dockerhub
     ports:
       - 8002:8000
     volumes:

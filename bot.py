@@ -1,10 +1,9 @@
 import discord
-from decouple import config
+from decouple import config as env
 import config
 import bot_commands
 
-TOKEN = config("BOT_TOKEN")
-
+TOKEN = env("BOT_TOKEN")
 
 def run_discord_bot():
     intents = discord.Intents.default()
@@ -36,6 +35,7 @@ def run_discord_bot():
             "!characters_db": bot_commands.get_characters_db,
             "!snip": bot_commands.parse_image,
             "!commands": bot_commands.get_commands,
+            "!test": bot_commands.test
         }
         # Parse the command:
         input_text = message.content.split()

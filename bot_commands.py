@@ -6,16 +6,20 @@ import char_classes
 import pytesseract
 from PIL import Image
 from io import BytesIO
-from config import tesseract
 import requests
+import json
+import datetime
 
 current_working_dir = os.getcwd()
 print("Current Working Directory:", current_working_dir)
 
 def send_message_to_website(message: dict, image_url=None):
-    payload = {}
+    print(datetime.datetime.now())
+    
+    payload = {'date': str(datetime.datetime.now()), 
+               'message': None, 
+               'image_url': None}
     if message:
-        print("test replace message")
         message = (
             message.replace("[0;31;40m", "")
             .replace("[0;36;40m", "")
@@ -23,16 +27,20 @@ def send_message_to_website(message: dict, image_url=None):
             .replace("ansi", "")
             .replace("`", "")
         )
-        print(message)
         payload['message'] = message
     if image_url:
-        payload['image_url'] =  image_url
+        payload['image_url'] = image_url
     if payload:
-        response = requests.post(config.url, data=payload, headers={'Content-Type': 'application/json'})
-        if response.status_code == 200:
-            print('JSON payload sent successfully')
-        else:
-            print('Failed to send JSON payload.')
+        try:
+            response = requests.post(config.url, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
+            if response.status_code == 201:
+                print(response.json())
+                print('JSON payload sent successfully')
+            else:
+                print('Failed to send JSON payload.')
+        except Exception as e:
+            print(str(e))
+            return str(e)
    
 
 async def invalid_input(message, flag):
@@ -53,6 +61,12 @@ async def invalid_input(message, flag):
             await message.channel.send(help_message)
         except Exception as e:
             print(e)
+
+async def test(message: dict) -> str:
+    test_string = """THIS IS A TEST FOR DEBUG PURPOSES"""
+    send_message_to_website(test_string)
+    return test_string
+
 
 
 async def get_commands(message: dict) -> str:
@@ -591,6 +605,7 @@ async def get_chars(message: dict) -> str:
 
 
 async def parse_image(message: dict):
+    
     if (
         message.attachments
         and message.content
@@ -630,6 +645,8 @@ async def parse_image(message: dict):
 
         c.execute(query, char_names)
         results = c.fetchall()
+        # A diffrent output to send to the website:
+        website_string = ''
         formatted_string = ""
         friendly_chars = []
         friendly_char_names = []
@@ -665,16 +682,16 @@ async def parse_image(message: dict):
             print(char_classes.emojis[char[1]])
             formatted_string += f"""```ansi
 {char[0]}: [0;31;40m{char[1]}{char_classes.emojis[char[1]]}```"""
-
+            website_string = formatted_string
         for char in friendly_chars:
             print(char_classes.emojis[char[1]])
             formatted_string += f"""```ansi
 {char[0]}: [0;36;40m{char[1]}{char_classes.emojis[char[1]]}```"""
-
+            website_string = formatted_string
         for char in unknown_char_names:
             formatted_string += f"""```ansi
 {char}: [0;37;40mUNKNOWN```"""
-
+            website_string += formatted_string
         # Get the class comps:
         for char in enemy_chars:
             char_class = char[1]
@@ -699,24 +716,31 @@ async def parse_image(message: dict):
                 chunk = formatted_string[i : i + 1994]
                 chunk = "```" + chunk + "```"
                 await message.channel.send(chunk)
-            send_message_to_website(formatted_string)
+            # send_message_to_website(formatted_string)
+            website_string = formatted_string
         else:
-            send_message_to_website(formatted_string)
+            website_string = formatted_string
+            # send_message_to_website(formatted_string)
             await message.channel.send(formatted_string)
 
         formatted_string = ""
+        website_string += '\n'
         if enemy_class_comp:
             formatted_string += f"""**Enemy Classes:** \n"""
-
+            website_string += f"""**Enemy Classes:** \n"""
             for char_class, count in sorted(
                 enemy_class_comp.items(), key=lambda x: x[1], reverse=True
             ):
                 formatted_string += (
                     f"""```{char_class}{char_classes.emojis[char_class]}: {count}```"""
                 )
+                website_string += (
+                    f"""```{char_class}{char_classes.emojis[char_class]}: {count}```\n"""
+                )
 
         if friendly_class_comp:
             formatted_string += f"""\n **Friendly Classes:** \n"""
+            website_string += f"""\n **Friendly Classes:** \n"""
 
             for char_class, count in sorted(
                 friendly_class_comp.items(), key=lambda x: x[1], reverse=True
@@ -724,9 +748,12 @@ async def parse_image(message: dict):
                 formatted_string += (
                     f"""```{char_class} {char_classes.emojis[char_class]}: {count}```"""
                 )
+                website_string += (
+                    f"""```{char_class} {char_classes.emojis[char_class]}: {count}```\n"""
+                )
 
         # Send class comp count
-        send_message_to_website(formatted_string, image_url)
+        send_message_to_website(website_string, image_url)
         await message.channel.send(formatted_string)
     except Exception as e:
         print(e)

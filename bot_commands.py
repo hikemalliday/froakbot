@@ -9,13 +9,15 @@ from io import BytesIO
 import requests
 import json
 import datetime
+from decouple import config as env
+db_path = env('DB_PATH')
+url = env('URL')
+
 
 current_working_dir = os.getcwd()
 print("Current Working Directory:", current_working_dir)
 
 def send_message_to_website(message: dict, image_url=None):
-    print(datetime.datetime.now())
-    
     payload = {'date': str(datetime.datetime.now()), 
                'message': None, 
                'image_url': None}
@@ -32,9 +34,8 @@ def send_message_to_website(message: dict, image_url=None):
         payload['image_url'] = image_url
     if payload:
         try:
-            response = requests.post(config.url, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
+            response = requests.post(url, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
             if response.status_code == 201:
-                print(response.json())
                 print('JSON payload sent successfully')
             else:
                 print('Failed to send JSON payload.')
@@ -112,9 +113,8 @@ def create_tables():
                             player_name text,
                             level integer                     
     )"""
-    print("config.db_path debug: " + config.db_path)
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(sql_Players_db)
         c.execute(sql_Characters_db)
@@ -122,7 +122,7 @@ def create_tables():
         print("Tables created!")
 
     except Exception as e:
-        print("database.py, create_tables()")
+        print("database.py, create_tables() error:")
         print(e)
         return str(e)
     finally:
@@ -133,7 +133,7 @@ async def get_players_db(message: dict) -> str:
     message.content = message.content.split()[1:]
     if message.content == []:
         try:
-            conn = sqlite3.connect(config.db_path)
+            conn = sqlite3.connect(db_path)
             c = conn.cursor()
             c.execute("""SELECT * FROM Players_db""")
             results = c.fetchall()
@@ -161,7 +161,7 @@ async def get_players_db(message: dict) -> str:
     else:
         try:
             guild = message.content[0]
-            conn = sqlite3.connect(config.db_path)
+            conn = sqlite3.connect(db_path)
             c = conn.cursor()
             c.execute("""SELECT * FROM Players_db WHERE guild = ?""", (guild,))
             results = c.fetchall()
@@ -178,7 +178,6 @@ async def get_players_db(message: dict) -> str:
                     .replace("2", "Neutral")
                 )
                 results_string += "\n"
-            print(results_string)
             if len(results_string) > 1994:
                 for i in range(0, len(results_string), 1994):
                     chunk = results_string[i : i + 1994]
@@ -208,11 +207,11 @@ async def get_characters_db(message: dict) -> str:
         for param in message.content:
             if param in char_classes.class_names:
                 char_class = param
-            if param in guilds:
+            if param in config.guilds:
                 guild = param
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
 
         if char_class and guild:
@@ -278,7 +277,7 @@ async def add_char(message: dict) -> str:
         char_class = "Shadowknight"
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
 
         c.execute("SELECT * FROM Players_db WHERE player_name = ?", (player_name,))
@@ -335,7 +334,7 @@ async def add_player(message: dict) -> str:
         return message
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(
             """INSERT INTO Players_db (player_name, relation, guild) VALUES (?, ?, ?)""",
@@ -368,7 +367,7 @@ async def delete_char(message: dict) -> str:
     char_name = char_name.title()
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("""DELETE FROM Characters_db WHERE char_name = ?""", (char_name,))
         conn.commit()
@@ -397,7 +396,7 @@ async def delete_player(message: dict) -> str:
     player_name = player_name.title()
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("""DELETE FROM Players_db WHERE player_name = ?""", (player_name,))
         conn.commit()
@@ -441,7 +440,7 @@ async def edit_char(message: dict) -> str:
         return message
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(
             """SELECT * FROM Characters_db WHERE char_name = ?""", (char_name_old,)
@@ -492,7 +491,7 @@ async def edit_player(message: dict) -> str:
         return message
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(
             """SELECT * FROM Players_db WHERE player_name = ?""", (player_name_old,)
@@ -529,7 +528,7 @@ async def who(message: dict) -> str:
     char_name = char_name.title()
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("""SELECT * FROM Characters_db WHERE char_name = ?""", (char_name,))
         results = c.fetchone()
@@ -573,7 +572,7 @@ async def get_chars(message: dict) -> str:
     player_name = player_name.title()
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(
             """SELECT * FROM Characters_db WHERE player_name = ?""", (player_name,)
@@ -635,7 +634,7 @@ async def parse_image(message: dict):
         char_names[i] = char_name
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         placeholders = ",".join(["?"] * len(char_names))
         query = f"""SELECT a.char_name, a.char_class, a.player_name, a.level, b.relation 
@@ -710,7 +709,6 @@ async def parse_image(message: dict):
                 friendly_class_comp[char_class] += 1
 
         # Send char + class list:
-        print(len(formatted_string))
         if len(formatted_string) > 1994:
             for i in range(0, len(formatted_string), 1994):
                 chunk = formatted_string[i : i + 1994]
@@ -779,7 +777,7 @@ async def parse_image_backup(extracted_text: str, message: dict, image_url: str)
         char_names[i] = char_name
 
     try:
-        conn = sqlite3.connect(config.db_path)
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         placeholders = ",".join(["?"] * len(char_names))
         query = f"""SELECT a.char_name, a.char_class, a.player_name, a.level, b.relation 
@@ -852,7 +850,6 @@ async def parse_image_backup(extracted_text: str, message: dict, image_url: str)
                 friendly_class_comp[char_class] += 1
 
         # Send char + class list:
-        print(len(formatted_string))
         if len(formatted_string) > 1994:
             for i in range(0, len(formatted_string), 1994):
                 chunk = formatted_string[i : i + 1994]

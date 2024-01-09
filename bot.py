@@ -2,6 +2,7 @@ import discord
 from decouple import config as env
 import config
 import bot_commands
+import db_migration
 
 TOKEN = env("BOT_TOKEN")
 
@@ -9,7 +10,11 @@ def run_discord_bot():
     intents = discord.Intents.default()
     intents.message_content = True
     client = discord.Client(intents=intents)
-    bot_commands.create_tables()
+    # commented out for now, we are mid db-revamp
+    #bot_commands.create_tables()
+    #db_migration.create_tables()
+    #db_migration.migrate_players_db()
+    db_migration.migrate_characters_db()
     
     @client.event
     async def on_ready():

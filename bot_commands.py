@@ -1,11 +1,10 @@
+# Descrated, currently undergoing Slash Commands API refactor
 import sqlite3
 import re
 import config
 import os
 import char_classes
-import pytesseract
-from PIL import Image
-from io import BytesIO
+
 import requests
 import json
 import datetime
@@ -16,6 +15,9 @@ url = env('URL')
 
 current_working_dir = os.getcwd()
 print("Current Working Directory:", current_working_dir)
+
+# Database re-vamp:
+# We must change the query strings to fit the new tables
 
 def send_message_to_website(message: dict, image_url=None):
     payload = {'date': str(datetime.datetime.now()), 
@@ -46,11 +48,11 @@ def send_message_to_website(message: dict, image_url=None):
 
 async def invalid_input(message, flag):
     help_messages = {
-        "!add_player": "Invalid format, correct format is: player_name, relation, guild",
-        "!edit_player": "Invalid format, correct format is: player_name_old, player_name_new, relation, guild",
-        "!add_char": "Invalid format, correct format is: char_name, char_class, player_name, level",
-        "!edit_char": "Invalid format, correct format is: char_name_old, char_name_new, char_class, player_name, level",
-        "!delete_player": "Invalid format, correct format is: player_name",
+        "!add_person": "Invalid format, correct format is: person_name, relation, guild",
+        "!edit_person": "Invalid format, correct format is: person_name_old, person_name_new, relation, guild",
+        "!add_char": "Invalid format, correct format is: char_name, char_class, person_name, level",
+        "!edit_char": "Invalid format, correct format is: char_name_old, char_name_new, char_class, person_name, level",
+        "!delete_person": "Invalid format, correct format is: person_name",
         "!delete_char": "Invalid format, correct format is: char_name",
         "!who": "Invalid format, correct format is: char_name",
     }
@@ -68,38 +70,37 @@ async def test(message: dict) -> str:
     send_message_to_website(test_string)
     return test_string
 
-
-
+# Will be descrated for V2
 async def get_commands(message: dict) -> str:
     # NOTE:
     # Paramter 'message' is a 'placeholder' param. Its not used. Its simply there to be compatible with the way the commands are called in 'bot.py'
     commands = """```COMMANDS:
 
-    !add_player: player_name, relation, guild_name
-    !add_char: char_name, char_class, player_name, level
-    !edit_player: player_name_old, player_name_new, relation, guild_name
-    !edit_char: char_name_old, char_name_new, char_class, player_name, level
-    !delete_player: player_name
+    !add_person: person_name, relation, guild_name
+    !add_char: char_name, char_class, person_name, level
+    !edit_person: person_name_old, person_name_new, relation, guild_name
+    !edit_char: char_name_old, char_name_new, char_class, person_name, level
+    !delete_player: person_name
     !delete_char: char_name
     !who: character_name
     !get_chars: char_name
 
-    **!players_db accepts zero or one parameters**
-    !players_db: empty field returns entire 'Players_db' OR: 
-                 !players_db guild_name
+    **!person accepts zero or one parameters**
+    !person: empty field returns entire 'person' table OR: 
+                 !person guild_name
     
-    **!characters_db accepts zero, one, or two parameters. Order DOES NOT matter**
-    !characters_db: empty field returns entire 'Characters_db' OR:
-                    !characters_db guild_name, char_class OR:
-                    !characters_db char_class, guild_name OR:
-                    !characters_db char_class OR:
-                    !characters_db guild_name
+    **!character accepts zero, one, or two parameters. Order DOES NOT matter**
+    !character: empty field returns entire 'Characters_db' OR:
+                    !character guild_name, char_class OR:
+                    !character char_class, guild_name OR:
+                    !character char_class OR:
+                    !character guild_name
     !snip: image_file
     ```"""
     send_message_to_website(commands)
     return commands
 
-
+# Desecrated:
 def create_tables():
     sql_Players_db = """ CREATE Table IF NOT EXISTS Players_db (
                             player_name text PRIMARY KEY,
@@ -129,13 +130,13 @@ def create_tables():
         conn.close()
 
 
-async def get_players_db(message: dict) -> str:
+async def get_person_table(message: dict) -> str:
     message.content = message.content.split()[1:]
     if message.content == []:
         try:
             conn = sqlite3.connect(db_path)
             c = conn.cursor()
-            c.execute("""SELECT * FROM Players_db""")
+            c.execute("""SELECT * FROM person""")
             results = c.fetchall()
             sorted_results = sorted(results, key=lambda result: result[0])
             results_string = ""
@@ -163,7 +164,7 @@ async def get_players_db(message: dict) -> str:
             guild = message.content[0]
             conn = sqlite3.connect(db_path)
             c = conn.cursor()
-            c.execute("""SELECT * FROM Players_db WHERE guild = ?""", (guild,))
+            c.execute("""SELECT * FROM person WHERE guild = ?""", (guild,))
             results = c.fetchall()
             sorted_results = sorted(results, key=lambda result: result[0])
             results_string = ""
@@ -193,7 +194,7 @@ async def get_players_db(message: dict) -> str:
             conn.close()
 
 
-async def get_characters_db(message: dict) -> str:
+async def get_character_table(message: dict) -> str:
     message.content = message.content.split()[1:]
     message.content = [elem.replace(",", "") for elem in message.content]
     char_class = None
@@ -216,24 +217,24 @@ async def get_characters_db(message: dict) -> str:
 
         if char_class and guild:
             c.execute(
-                """SELECT * FROM Characters_db
-                         WHERE char_class = ? AND player_name IN (SELECT player_name FROM Players_db WHERE guild = ?)
+                """SELECT * FROM character
+                         WHERE char_class = ? AND person_name IN (SELECT person_name FROM person WHERE guild = ?)
                          """,
                 (char_class, guild),
             )
         elif char_class:
             c.execute(
-                """SELECT * FROM Characters_db WHERE char_class = ?""", (char_class,)
+                """SELECT * FROM character WHERE char_class = ?""", (char_class,)
             )
         elif guild:
             c.execute(
-                """SELECT * FROM Characters_db
-                         WHERE player_name IN (SELECT player_name FROM Players_db WHERE guild = ?)
+                """SELECT * FROM character
+                         WHERE person_name IN (SELECT person_name FROM person WHERE guild = ?)
                          """,
                 (guild,),
             )
         else:
-            c.execute("SELECT * FROM Characters_db")
+            c.execute("SELECT * FROM character")
         results = c.fetchall()
     except Exception as e:
         print(e)
@@ -242,8 +243,8 @@ async def get_characters_db(message: dict) -> str:
         conn.close()
     sorted_results = sorted(results, key=lambda result: result[0])
     for result in sorted_results:
-        char_name, char_class, player_name, level = result
-        row = f"{char_name}, {char_class}, {player_name}, {level}"
+        char_name, char_class, person_name, level = result
+        row = f"{char_name}, {char_class}, {person_name}, {level}"
         results_string += row + "\n"
 
     if len(results_string) > 1994:
@@ -265,10 +266,10 @@ async def add_char(message: dict) -> str:
     if len(character_info) != 4:
         return await invalid_input(message, "!add_char")
 
-    char_name, char_class, player_name, level = character_info
+    char_name, char_class, person_name, level = character_info
     char_name = char_name.title()
     char_class = char_class.title()
-    player_name = player_name.title()
+    person_name = person_name.title()
     level = int(level)
 
     if char_class == "Mage":
@@ -280,27 +281,27 @@ async def add_char(message: dict) -> str:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
 
-        c.execute("SELECT * FROM Players_db WHERE player_name = ?", (player_name,))
+        c.execute("SELECT * FROM person WHERE person_name = ?", (person_name,))
         if not c.fetchall():
-            message = f'```Player "{player_name}" does not exist in "Players" database. Please create a "Players" db entry first. Aborting insert.```'
+            message = f'```Person "{person_name}" does not exist in "person" table. Please create a "person" entry first. Aborting insert.```'
             send_message_to_website(message)
             return message
 
-        c.execute("SELECT * FROM Characters_db WHERE char_name = ?", (char_name,))
+        c.execute("SELECT * FROM character WHERE char_name = ?", (char_name,))
         if c.fetchall():
             message = (
-                f'```"{char_name}" already exists in table "Characters". Aborting insert.```'
+                f'```"{char_name}" already exists in table "character". Aborting insert.```'
             )
             send_message_to_website(message)
             return message
 
         c.execute(
-            "INSERT INTO Characters_db (char_name, char_class, player_name, level) VALUES (?, ?, ?, ?)",
-            (char_name, char_class, player_name, level),
+            "INSERT INTO character (char_name, char_class, person_name, level) VALUES (?, ?, ?, ?)",
+            (char_name, char_class, person_name, level),
         )
         conn.commit()
 
-        c.execute("SELECT * FROM Characters_db WHERE char_name = ?", (char_name,))
+        c.execute("SELECT * FROM character WHERE char_name = ?", (char_name,))
         result = c.fetchone()
 
         conn.close()
@@ -316,15 +317,15 @@ async def add_char(message: dict) -> str:
         return str(e)
 
 
-async def add_player(message: dict) -> str:
+async def add_person(message: dict) -> str:
     character_info = message.content.split()[1:]
     character_info = [elem.replace(",", "") for elem in character_info]
 
     if len(character_info) != 3:
-        return await invalid_input(message, "!add_player")
+        return await invalid_input(message, "!add_person")
 
-    player_name, relation, guild = character_info
-    player_name = player_name.title()
+    person_name, relation, guild = character_info
+    person_name = person_name.title()
     relation = int(relation)
     guild = guild.title()
 
@@ -337,22 +338,22 @@ async def add_player(message: dict) -> str:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(
-            """INSERT INTO Players_db (player_name, relation, guild) VALUES (?, ?, ?)""",
-            ((player_name, relation, guild)),
+            """INSERT INTO person (person_name, relation, guild) VALUES (?, ?, ?)""",
+            ((person_name, relation, guild)),
         )
         conn.commit()
         message = (
-            f'```Player "{player_name}" successfully inserted into "Players" database.```'
+            f'```Player "{person_name}" successfully inserted into "person" table.```'
         )
         send_message_to_website(message)
         return message
     except Exception as e:
         if "UNIQUE constraint failed" in str(e):
-            message = f'```Player "{player_name}" already exists in table "Players". Aborting insert.```'
+            message = f'```Person "{person_name}" already exists in table "person" table. Aborting insert.```'
             send_message_to_website(message)
             return message
         else:
-            print("SQLite error, database.add_player():")
+            print("SQLite error, database.add_person():")
             print(e)
             return str(e)
     finally:
@@ -361,7 +362,7 @@ async def add_player(message: dict) -> str:
 
 async def delete_char(message: dict) -> str:
     if len(message.content.split()) != 2:
-        return await invalid_input(message, "!delete_player")
+        return await invalid_input(message, "!delete_char")
 
     char_name = message.content.split()[1:][0]
     char_name = char_name.title()
@@ -369,7 +370,7 @@ async def delete_char(message: dict) -> str:
     try:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute("""DELETE FROM Characters_db WHERE char_name = ?""", (char_name,))
+        c.execute("""DELETE FROM character WHERE char_name = ?""", (char_name,))
         conn.commit()
 
         if c.rowcount > 0:
@@ -388,25 +389,25 @@ async def delete_char(message: dict) -> str:
         conn.close()
 
 
-async def delete_player(message: dict) -> str:
+async def delete_person(message: dict) -> str:
     if len(message.content.split()) != 2:
-        return await invalid_input(message, "!delete_player")
+        return await invalid_input(message, "!delete_person")
 
-    player_name = message.content.split()[1:][0]
-    player_name = player_name.title()
+    person_name = message.content.split()[1:][0]
+    person_name = person_name.title()
 
     try:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute("""DELETE FROM Players_db WHERE player_name = ?""", (player_name,))
+        c.execute("""DELETE FROM person WHERE person_name = ?""", (person_name,))
         conn.commit()
 
         if c.rowcount > 0:
-            message = f'```Player "{player_name}" successfully deleted!```'
+            message = f'```Person "{person_name}" successfully deleted!```'
             send_message_to_website(message)
             return message
         else:
-            message = f'```Character "{player_name}" does not exist```'
+            message = f'```Person "{person_name}" does not exist```'
             send_message_to_website(message)
             return message
 
@@ -425,10 +426,10 @@ async def edit_char(message: dict) -> str:
         send_message_to_website(await invalid_input(message, "!edit_char"))
         return await invalid_input(message, "!edit_char")
 
-    char_name_old, char_name_new, char_class, player_name, level = character_info
+    char_name_old, char_name_new, char_class, person_name, level = character_info
     char_name_old = char_name_old.title()
     char_name_new = char_name_new.title()
-    player_name = player_name.title()
+    person_name = person_name.title()
     level = int(level)
 
     if char_class == "Mage":
@@ -443,35 +444,35 @@ async def edit_char(message: dict) -> str:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(
-            """SELECT * FROM Characters_db WHERE char_name = ?""", (char_name_old,)
+            """SELECT * FROM character WHERE char_name = ?""", (char_name_old,)
         )
         results = c.fetchall()
 
         if not results:
-            message = f'```Character "{char_name_old}" does not exist in "Players" database. Aborting EDIT.```'
+            message = f'```Character "{char_name_old}" does not exist in "character" table. Aborting EDIT.```'
             send_message_to_website(message)
             return message
 
     except Exception as e:
-        print("SQLite error, database.edit_char():")
+        print("SQLite error, bot_commands.edit_char():")
         print(e)
         return e
 
     try:
         c.execute(
-            """UPDATE Characters_db SET char_name = ?, char_class = ?, player_name = ?, level = ? WHERE char_name = ?""",
-            (char_name_new, char_class, player_name, level, char_name_old),
+            """UPDATE character SET char_name = ?, char_class = ?, person_name = ?, level = ? WHERE char_name = ?""",
+            (char_name_new, char_class, person_name, level, char_name_old),
         )
         results = c.fetchall()
         conn.commit()
-        message = f"```Character CHANGED: char_name = {char_name_new}, char_class = {char_class}, player_name = {player_name}, level = {level}```"
+        message = f"```Character CHANGED: char_name = {char_name_new}, char_class = {char_class}, person_name = {person_name}, level = {level}```"
         send_message_to_website(message)
         return message
     finally:
         conn.close()
 
 
-async def edit_player(message: dict) -> str:
+async def edit_person(message: dict) -> str:
     character_info = message.content.split()[1:]
     character_info = [elem.replace(",", "") for elem in character_info]
 
@@ -479,9 +480,9 @@ async def edit_player(message: dict) -> str:
         send_message_to_website(await invalid_input(message, "!edit_char"))
         return await invalid_input(message, "!edit_char")
 
-    player_name_old, player_name_new, relation, guild = character_info
-    player_name_old = player_name_old.title()
-    player_name_new = player_name_new.title()
+    person_name_old, person_name_new, relation, guild = character_info
+    person_name_old = person_name_old.title()
+    person_name_new = person_name_new.title()
     relation = int(relation)
     guild = guild.title()
 
@@ -494,29 +495,29 @@ async def edit_player(message: dict) -> str:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(
-            """SELECT * FROM Players_db WHERE player_name = ?""", (player_name_old,)
+            """SELECT * FROM person WHERE person_name = ?""", (person_name_old,)
         )
         results = c.fetchall()
         conn.commit()
 
         if not results:
-            message = f'```Player "{player_name_old}" does not exist in "Players" database. Aborting EDIT.```'
+            message = f'```Person "{person_name_old}" does not exist in "person" table. Aborting EDIT.```'
             send_message_to_website(message)
             return message
 
     except Exception as e:
-        print("SQLite error, database.edit_char():")
+        print("SQLite error, bot_commands.edit_char():")
         print(e)
         return e
 
     try:
         c.execute(
-            """UPDATE Players_db SET player_name = ?, relation = ?, guild = ? WHERE player_name = ?""",
-            (player_name_new, relation, guild, player_name_old),
+            """UPDATE person SET person_name = ?, relation = ?, guild = ? WHERE person_name = ?""",
+            (person_name_new, relation, guild, person_name_old),
         )
         results = c.fetchall()
         conn.commit()
-        message = f"```Player CHANGED: player_name = {player_name_new}, relation = {relation}, guild = {guild}```"
+        message = f"```Person CHANGED: person_name = {person_name_new}, relation = {relation}, guild = {guild}```"
         send_message_to_website(message)
         return message
     finally:
@@ -530,22 +531,22 @@ async def who(message: dict) -> str:
     try:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute("""SELECT * FROM Characters_db WHERE char_name = ?""", (char_name,))
+        c.execute("""SELECT * FROM character WHERE char_name = ?""", (char_name,))
         results = c.fetchone()
 
         if results is None:
-            message = f'```Character "{char_name}" doesnt exist in "Characters" db```'
+            message = f'```Character "{char_name}" doesnt exist in "character" table```'
             send_message_to_website(message)
             return message
         char_class = results[1]
-        player_name = results[2]
+        person_name = results[2]
 
         c2 = conn.cursor()
-        c2.execute("""SELECT * from Players_db WHERE player_name = ?""", (player_name,))
+        c2.execute("""SELECT * from person WHERE person_name = ?""", (person_name,))
         results = c2.fetchone()
 
         if results is None:
-            message = f'```Player "{player_name} doesnt exist in "Players" db```'
+            message = f'```Person "{person_name} doesnt exist in "person" table```'
             send_message_to_website(message)
             return message
 
@@ -556,7 +557,7 @@ async def who(message: dict) -> str:
         if results[1] == 2:
             relation = "Neutral"
         results_string = f"```Character: {char_name}, Class: {char_class}```"
-        results_string += f'```Player info for "{char_name}": Player: {results[0]}, Relation: {relation}, Guild: {results[2]}```'
+        results_string += f'```Person info for "{char_name}": Person: {results[0]}, Relation: {relation}, Guild: {results[2]}```'
         send_message_to_website(results_string)
         return results_string
 
@@ -568,22 +569,22 @@ async def who(message: dict) -> str:
 
 
 async def get_chars(message: dict) -> str:
-    player_name = message.content[11:].strip()
-    player_name = player_name.title()
+    person_name = message.content[11:].strip()
+    person_name = person_name.title()
 
     try:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute(
-            """SELECT * FROM Characters_db WHERE player_name = ?""", (player_name,)
+            """SELECT * FROM character WHERE person_name = ?""", (person_name,)
         )
         results = c.fetchall()
         sorted_results = sorted(results, key=lambda result: result[0])
 
         formatted_characters = ""
         for result in sorted_results:
-            char_name, char_class, player_name, level = result
-            row = f"Character: {char_name}, Class: {char_class}, Player: {player_name}, Level: {level}"
+            char_name, char_class, person_name, level = result
+            row = f"Character: {char_name}, Class: {char_class}, Person: {person_name}, Level: {level}"
             formatted_characters += row
             formatted_characters += "\n"
         if len(formatted_characters) > 1994:
@@ -601,7 +602,6 @@ async def get_chars(message: dict) -> str:
         return str(e)
     finally:
         conn.close()
-
 
 async def parse_image(message: dict):
     
@@ -637,9 +637,9 @@ async def parse_image(message: dict):
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         placeholders = ",".join(["?"] * len(char_names))
-        query = f"""SELECT a.char_name, a.char_class, a.player_name, a.level, b.relation 
-            FROM Characters_db a INNER JOIN Players_db b 
-            ON a.player_name = b.player_name 
+        query = f"""SELECT a.char_name, a.char_class, a.person_name, a.level, b.relation 
+            FROM character a INNER JOIN player b 
+            ON a.person_name = b.person_name 
             WHERE char_name IN ({placeholders})"""
 
         c.execute(query, char_names)
@@ -660,7 +660,7 @@ async def parse_image(message: dict):
 
         for result in results:
             result = list(result)
-            char_name, char_class, player_name, level, relation = result
+            char_name, char_class, person_name, level, relation = result
             if relation == 0:
                 enemy_chars.append([char_name, char_class, level])
                 enemy_char_names.append(char_name)
@@ -780,9 +780,9 @@ async def parse_image_backup(extracted_text: str, message: dict, image_url: str)
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         placeholders = ",".join(["?"] * len(char_names))
-        query = f"""SELECT a.char_name, a.char_class, a.player_name, a.level, b.relation 
-            FROM Characters_db a INNER JOIN Players_db b 
-            ON a.player_name = b.player_name 
+        query = f"""SELECT a.char_name, a.char_class, a.person_name, a.level, b.relation 
+            FROM character a INNER JOIN person b 
+            ON a.person_name = b.person_name 
             WHERE char_name IN ({placeholders})"""
 
         c.execute(query, char_names)

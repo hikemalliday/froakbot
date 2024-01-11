@@ -18,6 +18,8 @@ Also contains basic CRUD commands for search of character data.
 
 # Dev Notes:
 
+Currently re-vamping the database (migrating tables and such) for a better naming convention, added FKs, and also so I can scale the bot into a raid attendence / loot tracker.
+
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
 
 Created in Python. The bot reads / writes to a local SQLite database. The image parsing library used is Pytesseract.

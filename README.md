@@ -4,7 +4,7 @@
 ##### Docker Hub:
 [https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/r/hikemalliday/froakbot)
 
-(Currently undergoing a refactor from text commands to the superior 'Slash Commands API')
+Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Some .py files are descrated, as commented at the tops of said files, I just dont want to outright delete them yet.
 
 The discord bot parses an image of the character names in a zone:
 

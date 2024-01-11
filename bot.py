@@ -1,3 +1,4 @@
+# Descrated. Currently undergoing Slash Commands API refactor.
 import discord
 from decouple import config as env
 import config

@@ -577,11 +577,8 @@ async def parse_image(message: dict):
         return str(e)
     
 async def item_search(user_input: str) -> str:
-    print('test0')
     if user_input:
-        print('test1')
         try:
-            print('test2')
             db_functions.create_levenshtein_function(bot)
             c = bot.db_connection.cursor()
             # Attempt to find exact string match first:
@@ -594,7 +591,6 @@ async def item_search(user_input: str) -> str:
                 send_message_to_website(f'Item found: {results[0][1]}')
                 return results
             else:
-                print('test3')
                 c.execute('''SELECT subquery.*
                     FROM (
                     SELECT * FROM items_master WHERE name LIKE ? || '%'

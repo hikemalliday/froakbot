@@ -39,7 +39,8 @@ def create_virtual_table(bot: object):
         print('Virtual Table "items_virtual" created.')
     except Exception as e:
         print('Error creating virtual table:', e)
-# Created from the Prject Quarm items database.
+
+# Created from the Proect Quarm items database.
 def create_items_master_table(bot: object):
     try:
         c1 = bot.db_connection.cursor()
@@ -137,7 +138,7 @@ def create_tables():
     finally:
         conn.close()
 
-# Next, we need to SELECT ALL from the old tables, and insert into the new tables
+# Used to migrate the old tables into the new schema (descrated):
 def migrate_players_db():
     try:
         conn = sqlite3.connect(db_path)
@@ -155,6 +156,7 @@ def migrate_players_db():
     finally:
         conn.close()
 
+# Used to migrate the old tables into the new schema (desecrated):
 def migrate_characters_db():
     try:
         conn = sqlite3.connect(db_path)

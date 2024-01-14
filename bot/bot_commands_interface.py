@@ -2,6 +2,7 @@
 import discord
 import bot.bot_commands_logic as logic
 from discord import app_commands
+import helper
 
 @app_commands.command(name='add_person')
 @app_commands.describe(person_name='Enter a person name', relation='Enter relation status', guild='Enter a guild')
@@ -89,7 +90,7 @@ async def get_characters_table(interaction: discord.Interaction, guild: str = No
             await interaction.followup.send(chunk)
     else:
         await interaction.followup.send(results)
-        
+
 async def parse_image(message: dict):
     await logic.parse_image(message)
 
@@ -97,6 +98,22 @@ async def parse_image(message: dict):
 async def item_search(interaction: discord.Interaction, user_input: str):
     results = await logic.item_search(user_input)
     await interaction.response.send_message(results)
+
+@app_commands.command(name='biggest_channel')
+async def get_most_populated_channel(interaction: discord.Interaction):
+    if interaction.guild:
+        results = await helper.get_most_populated_channel(interaction.guild)
+        await interaction.response.send_message(results)
+    else:
+        await interaction.response.send_message("Error (biggest_channel): no guild passed.")
+
+@app_commands.command(name='add_raid')
+async def add_raid(interaction: discord.Interaction, raid_name: str):
+    if interaction.guild:
+        results = await logic.add_raid(interaction.guild, raid_name)
+        await interaction.response.send_message(results)
+    else:
+        await interaction.response.send_message("Error (add_raid): no guild passed.")
 
 slash_commands = [
     add_person, 
@@ -109,5 +126,7 @@ slash_commands = [
     get_characters, 
     get_person_table, 
     get_characters_table, 
-    item_search
+    item_search,
+    get_most_populated_channel,
+    add_raid
     ]

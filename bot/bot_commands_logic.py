@@ -7,6 +7,8 @@ import requests
 import pytesseract
 import pytesseract
 import helper
+from datetime import datetime
+
 from PIL import Image
 from io import BytesIO
 import re
@@ -576,7 +578,6 @@ async def item_search(user_input: str) -> str:
             c.execute('''SELECT * FROM items_master WHERE name = ?''', (user_input,))
             results = c.fetchall()
             if results and results[0][1]:
-                print('test2.5')
                 print('Exact string found:')
                 print(results[0][1])
                 send_message_to_website(f'Item found: {results[0][1]}')
@@ -596,5 +597,25 @@ async def item_search(user_input: str) -> str:
                 return results
         except Exception as e:
             print(e)
+
+async def add_raid(guild: object, raid_name: str):
+    try:
+        timestamp = datetime.now().strftime("%m-%d-%Y")
+        print(timestamp)
+        raiders = await helper.get_most_populated_channel(guild)
+        c = bot.db_connection.cursor()
+        c.execute('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
+        bot.db_connection.commit()
+        raid_id = c.lastrowid
+        for raider in raiders:
+            c.execute('''INSERT INTO dkp_test (person_name, raid_id) VALUES (?, ?)''', (raider, raid_id))
+        return 'Raid successfully added'
+    except Exception as e:
+        print(e)
+        return str(e)
+    
+# in order to automate re-freshing of test tables:
+# Drop all test tables, recreate test tables
+
         
     

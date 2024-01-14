@@ -2,9 +2,10 @@
 from decouple import config as env
 import data.config as config
 import  bot.bot_commands_interface as bot_commands
-from database_connection import DatabaseConnection
+from db_connection import DatabaseConnection
 from contextlib import contextmanager
 from bot.bot_instance import bot
+import db_functions
 
 db_path = config.db_path
 TOKEN = env("BOT_TOKEN")
@@ -25,28 +26,28 @@ def run_discord_bot():
                 print(f'Synced {len(synced)} command(s)')
             except Exception as e:
                 print(e)
-        
         @bot.event
         async def on_message(message):
             commands = {
                 '!snip': bot_commands.parse_image
             }
 
-            input_text = message.content.split()
-            command = input_text[0].lower()
+            if message and message.content:
+                input_text = message.content.split()
+                command = input_text[0].lower()
 
-            if message.author == bot.user:
-                return
+                if message.author == bot.user:
+                    return
 
-            if command in commands:
-                user_roles = [role.name for role in message.author.roles]
-                if any(role in config.allowed_roles for role in user_roles):
-                    results = await commands[command](message)
-                    if results is None:
-                        return
+                if command in commands:
+                    user_roles = [role.name for role in message.author.roles]
+                    if any(role in config.allowed_roles for role in user_roles):
+                        results = await commands[command](message)
+                        if results is None:
+                            return
 
-                    await message.channel.send(results)
-            await bot.process_commands(message)
+                        await message.channel.send(results)
+                await bot.process_commands(message)
         bot.run(TOKEN)
     finally:
         db.close()

@@ -74,7 +74,7 @@ def create_items_master_table(bot: object):
         print(f'Error connection to MariaDB: {e}')
         return
 
-def create_tables():
+def create_tables(bot: object):
     sql_person_table = """CREATE Table IF NOT EXISTS person (
                         person_name TEXT PRIMARY KEY,
                         relation INTEGER,
@@ -121,15 +121,14 @@ def create_tables():
     )"""
 
     try:
-        conn = sqlite3.connect(db_path)
-        c = conn.cursor()
+        c = bot.db_connection.cursor()
         c.execute(sql_person_table)
         c.execute(sql_character_table)
         c.execute(sql_raid_master_table)
         c.execute(sql_person_loot_table)
         c.execute(sql_dkp_table)
         c.execute(sql_raid_ra_table)
-        conn.commit()
+        bot.db_connection.commit()
         print('re-vamped tables created!')
     except Exception as e:
         print('db_migration.create_tables() error:')
@@ -137,15 +136,14 @@ def create_tables():
         return str(e)
    
 # Used to migrate the old tables into the new schema (descrated):
-def migrate_players_db():
+def migrate_players_db(bot: object):
     try:
-        conn = sqlite3.connect(db_path)
-        c = conn.cursor()
+        c = bot.db_connection.cursor()
         query = """INSERT INTO person (person_name, relation, guild)
                 SELECT player_name, relation, guild
                 FROM Players_db"""
         c.execute(query)
-        conn.commit()
+        bot.db_connection.commit()
         print('Players_db to person migration complete!')
     except Exception as e:
         print('db_migration.migrate_players_db() error:')
@@ -153,16 +151,97 @@ def migrate_players_db():
         return str(e)
     
 # Used to migrate the old tables into the new schema (desecrated):
-def migrate_characters_db():
+def migrate_characters_db(bot: object):
     try:
-        conn = sqlite3.connect(db_path)
-        c = conn.cursor()
+        c = bot.db_connection.cursor()
         query = """INSERT INTO character (char_name, char_class, person_name, level)
                 SELECT char_name, char_class, player_name, level
                 FROM Characters_db"""
         c.execute(query)
-        conn.commit()
+        bot.db_connection.commit()
         print('Characters_db to character migration complete!')
     except Exception as e:
         print('db_migration.migrate_characters_db complete!')
 
+def drop_tables(bot: object):
+    try:
+        c = bot.db_connection.cursor()
+        c.execute('''DROP TABLE person;''')
+        c.execute('''DROP TABLE person_loot;''')
+        c.execute('''DROP TABLE raid_master;''')
+        c.execute('''DROP TABLE character;''')
+        c.execute('''DROP TABLE dkp;''')
+        c.execute('''DROP TABLE raid_ra;''')
+        bot.db_connection.commit()
+        print('TABLES DROPPED')
+        
+    except Exception as e:
+        print('reset_tables() error: ', str(e))
+        return str(e)
+    
+def create_test_tables(bot: object):
+    sql_person_table_test = """CREATE Table IF NOT EXISTS person_test (
+                        person_name TEXT PRIMARY KEY,
+                        relation INTEGER,
+                        guild TEXT
+    )"""
+
+    sql_character_table_test = """CREATE Table IF NOT EXISTS character_test (
+                          char_name TEXT PRIMARY KEY,
+                          char_class TEXT NOT NULL,
+                          person_name text,
+                          level INTEGER,
+                          FOREIGN KEY (person_name) REFERENCES person(person_name)
+    )"""
+
+    sql_raid_master_table_test = """CREATE Table IF NOT EXISTS raid_master_test (
+                            raid_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            raid_name TEXT NOT NULL,
+                            raid_date TEXT
+    )"""
+
+    sql_person_loot_table_test = """CREATE Table IF NOT EXISTS person_loot_test (
+                            entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            person_name TEXT,
+                            item_name TEXT,
+                            raid_id INTEGER,
+                            FOREIGN KEY (person_name) REFERENCES person(person_name),
+                            FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id)
+    )"""
+
+    sql_dkp_table_test = """CREATE Table IF NOT EXISTS dkp_test (
+                    entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    person_name TEXT,
+                    raid_id INTEGER,
+                    dkp_points INTEGER,
+                    FOREIGN KEY (person_name) REFERENCES person(person_name),
+                    FOREIGN KEY (raid_id) REFERENCES raids_master(raid_id)
+    )"""
+
+    sql_raid_ra_table_test = """CREATE Table IF NOT EXISTS raid_ra_test (
+                        entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        person_name TEXT,
+                        raid_id INTEGER,
+                        FOREIGN KEY (person_name) REFERENCES person(person_name),
+                        FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id)
+    )"""
+
+    try:
+        c = bot.db_connection.cursor()
+        c.execute(sql_person_table_test)
+        c.execute(sql_character_table_test)
+        c.execute(sql_raid_master_table_test)
+        c.execute(sql_person_loot_table_test)
+        c.execute(sql_dkp_table_test)
+        c.execute(sql_raid_ra_table_test)
+        bot.db_connection.commit()
+        print('Test tables created!')
+    except Exception as e:
+        print('db_migration.create_tables() error:')
+        print(e)
+        return str(e)
+
+# in order to automate re-freshing of test tables:
+# Drop all test tables, recreate test tables
+def reset_test_tables(bot: object):
+    

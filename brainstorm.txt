@@ -1,0 +1,23 @@
+Proposed DKP bot:
+**DISCALIMER: Could also just not this, and merely record RA, meaning just record if a person was at a given raid or not.
+
+creating a dkp bot. was brainstorming on different ways to handle RA / DKP. we dont need to even spend the DKP obviously, its merely a metric to help tiebreakers / loot calls.
+Also, its optional to even use it , obviously. I just thought it could be useful / fun to track raid attendence, but it will def be useful to track items awarded in the bot at the very least (this makes querying what people have been awarded fast on the fly)
+At the moment, this is what i have proposed (brainstorms welcomed):
+Here are the discord commands:
+/start_raid:
+    -This command does a few things. Firstly:
+        -Enters a row / entry into the 'raids_master' table. These rows have 3 columns:
+            -raid_id: this is just an id (number) that is used to uniqely ID raids/ rows in the database
+            -raid: this is a sentence or word that describes the raid. Example: 'VP', 'Golems', 'HoT'
+            -date: this is a timestamp
+            -dkp_total: this is a number that is appended later when the /stop_raid command is invoked.
+    -After the row is inserted into the table, if successful, 'active_raid' variable is set.
+    -A snapshot is then taken of the raid channel, and all the members within the channel are added to variable 'raiders'
+    -One point is awarded for ontime when the /start_raid command is first invoked.
+    -While the raid is active, every 30 minutes, another point is added
+/stop_raid:
+    -This command stops the current 'active_raid':
+        -'raids_master.dkp_total' is appended with the correct value.
+        -The dkp earned by the people inside 'raiders' variable are stored into table 'DKP'
+        -Clears the 'active_raid' and 'raiders' variables.

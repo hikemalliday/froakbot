@@ -4,6 +4,8 @@
 ##### Docker Hub:
 [https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/r/hikemalliday/froakbot)
 
+Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Some .py files are descrated, as commented at the tops of said files, I just dont want to outright delete them yet.
+
 The discord bot parses an image of the character names in a zone:
 
 ![alt text](https://cdn.discordapp.com/attachments/617825237752479751/1175861016316358656/image.png?ex=656cc4e8&is=655a4fe8&hm=064098870915b8f663045b87ebcfa378e0cafa5d5a14762bdc3cd8ca84e5a3d7&)
@@ -18,7 +20,7 @@ Also contains basic CRUD commands for search of character data.
 
 # Dev Notes:
 
-Currently re-vamping the database (migrating tables and such) for a better naming convention, added FKs, and also so I can scale the bot into a raid attendence / loot tracker.
+Currently refactoring the text commands into superior 'Slash Commands', using the Slash Commands API. Some of the .py files are descrated, as commented at the top of the files.
 
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
 

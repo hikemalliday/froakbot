@@ -1,6 +1,6 @@
-import bot2
+import bot.bot_main as bot_main
 
 if __name__ == '__main__':
-    bot2.run_discord_bot()
+    bot_main.run_discord_bot()
     
 

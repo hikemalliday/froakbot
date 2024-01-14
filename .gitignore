@@ -1,13 +1,14 @@
 /.venv
+/__pycache__
+/desecrated
+/mysql
 .env
 *.db
 keys.txt
 notes.txt
 chars.txt
-/__pycache__
 requirements.txt
 .prettierignore
-/froak-db
 config.py
 database-revamp.py
-/mysql
+database_connection.py

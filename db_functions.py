@@ -58,7 +58,7 @@ def create_items_master_table(bot: object):
             host='127.0.0.1',
             port=3306,
             user='root',
-            password='Albinotroll1324!',
+            password='-',
             database='quarm' 
         )
         if connection.is_connected():
@@ -73,6 +73,33 @@ def create_items_master_table(bot: object):
     except mysql.connector.Error as e:
         print(f'Error connection to MariaDB: {e}')
         return
+# Used to migrate the old tables into the new schema (descrated):
+def migrate_players_db(bot: object):
+    try:
+        c = bot.db_connection.cursor()
+        query = """INSERT INTO person (person_name, relation, guild)
+                SELECT player_name, relation, guild
+                FROM Players_db"""
+        c.execute(query)
+        bot.db_connection.commit()
+        print('Players_db to person migration complete!')
+    except Exception as e:
+        print('db_migration.migrate_players_db() error:')
+        print(e)
+        return str(e)
+    
+# Used to migrate the old tables into the new schema (desecrated):
+def migrate_characters_db(bot: object):
+    try:
+        c = bot.db_connection.cursor()
+        query = """INSERT INTO character (char_name, char_class, person_name, level)
+                SELECT char_name, char_class, player_name, level
+                FROM Characters_db"""
+        c.execute(query)
+        bot.db_connection.commit()
+        print('Characters_db to character migration complete!')
+    except Exception as e:
+        print('db_migration.migrate_characters_db complete!')
 
 def create_tables(bot: object):
     sql_person_table = """CREATE Table IF NOT EXISTS person (
@@ -134,34 +161,6 @@ def create_tables(bot: object):
         print('db_migration.create_tables() error:')
         print(e)
         return str(e)
-   
-# Used to migrate the old tables into the new schema (descrated):
-def migrate_players_db(bot: object):
-    try:
-        c = bot.db_connection.cursor()
-        query = """INSERT INTO person (person_name, relation, guild)
-                SELECT player_name, relation, guild
-                FROM Players_db"""
-        c.execute(query)
-        bot.db_connection.commit()
-        print('Players_db to person migration complete!')
-    except Exception as e:
-        print('db_migration.migrate_players_db() error:')
-        print(e)
-        return str(e)
-    
-# Used to migrate the old tables into the new schema (desecrated):
-def migrate_characters_db(bot: object):
-    try:
-        c = bot.db_connection.cursor()
-        query = """INSERT INTO character (char_name, char_class, person_name, level)
-                SELECT char_name, char_class, player_name, level
-                FROM Characters_db"""
-        c.execute(query)
-        bot.db_connection.commit()
-        print('Characters_db to character migration complete!')
-    except Exception as e:
-        print('db_migration.migrate_characters_db complete!')
 
 def drop_tables(bot: object):
     try:
@@ -241,8 +240,6 @@ def create_test_tables(bot: object):
         print(e)
         return str(e)
 
-# in order to automate re-freshing of test tables:
-# Drop all test tables, recreate test tables
 def drop_test_tables(bot: object):
     try:
         c = bot.db_connection.cursor()
@@ -253,7 +250,7 @@ def drop_test_tables(bot: object):
         c.execute('''DROP TABLE dkp_test;''')
         c.execute('''DROP TABLE raid_ra_test;''')
         bot.db_connection.commit()
-        print('TEST TABLES DROPPED')   
+        print('Test tables dropped.')   
     except Exception as e:
         print('reset_tables() error, couldnt drop tables: ', str(e))
         return str(e)

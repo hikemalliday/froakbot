@@ -243,5 +243,27 @@ def create_test_tables(bot: object):
 
 # in order to automate re-freshing of test tables:
 # Drop all test tables, recreate test tables
+def drop_test_tables(bot: object):
+    try:
+        c = bot.db_connection.cursor()
+        c.execute('''DROP TABLE person_test;''')
+        c.execute('''DROP TABLE person_loot_test;''')
+        c.execute('''DROP TABLE raid_master_test;''')
+        c.execute('''DROP TABLE character_test;''')
+        c.execute('''DROP TABLE dkp_test;''')
+        c.execute('''DROP TABLE raid_ra_test;''')
+        bot.db_connection.commit()
+        print('TEST TABLES DROPPED')   
+    except Exception as e:
+        print('reset_tables() error, couldnt drop tables: ', str(e))
+        return str(e)
+
 def reset_test_tables(bot: object):
+    try:
+        drop_test_tables(bot)
+        create_test_tables(bot)
+    except Exception as e:
+        print('Couldnt reset test tables: ', str(e))
+        return
     
+

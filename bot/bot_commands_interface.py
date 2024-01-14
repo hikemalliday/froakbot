@@ -89,11 +89,7 @@ async def get_characters_table(interaction: discord.Interaction, guild: str = No
             await interaction.followup.send(chunk)
     else:
         await interaction.followup.send(results)
-
-@app_commands.command(name='get_commands')
-async def get_commands(interaction: discord.Interaction):
-    await interaction.response.send_message('not added yet')
-
+        
 async def parse_image(message: dict):
     await logic.parse_image(message)
 
@@ -113,6 +109,5 @@ slash_commands = [
     get_characters, 
     get_person_table, 
     get_characters_table, 
-    get_commands, 
     item_search
     ]

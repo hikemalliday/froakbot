@@ -75,8 +75,7 @@ async def add_person(person_name: str, relation: str, guild: str) -> object:
             print("SQLite error, database.add_person():")
             print(e)
             return str(e)
-    
-    
+      
 async def add_character(character_name: str, character_class: str, level: int, person_name: str) -> str:
     if character_class.lower() == "mage":
         character_class = "Magician"
@@ -87,9 +86,7 @@ async def add_character(character_name: str, character_class: str, level: int, p
         return f'Invalid input. Please provide a valid class name: {str(class_names)}'
     
     try:
-        
         c = bot.db_connection.cursor()
-
         c.execute("SELECT * FROM person WHERE person_name = ?", (person_name,))
         if not c.fetchall():
             message = f'```Person "{person_name}" does not exist in "person" table. Please create a "person" entry first. Aborting insert.```'
@@ -99,7 +96,7 @@ async def add_character(character_name: str, character_class: str, level: int, p
         c.execute("SELECT * FROM character WHERE char_name = ?", (character_name,))
         if c.fetchall():
             message = (
-                f'```"{character_name}" already exists in table "character". Aborting insert.```'
+                f'```Character "{character_name}" already exists in table "character". Aborting insert.```'
             )
             send_message_to_website(message)
             return message
@@ -254,14 +251,14 @@ async def edit_character(character_name: str, character_name_new: str, character
         message = f"```Character CHANGED: char_name = {character_name_new}, char_class = {character_class}, person_name = {person_name}, level = {level}```"
         send_message_to_website(message)
         return message
-    finally:
-        bot.db_connection.close()
+    except Exception as e:
+        print(e)
+        return str(e)
     
 async def who(character_name: str) -> str:
     character_name = character_name.title()
 
     try:
-        
         c = bot.db_connection.cursor()
         c.execute("""SELECT * FROM character WHERE char_name = ?""", (character_name,))
         results = c.fetchone()
@@ -315,7 +312,6 @@ async def get_characters(person_name: str) -> str:
             formatted_characters += "\n"
         send_message_to_website(formatted_characters)
         return "```" + formatted_characters + "```"
-
     except Exception as e:
         print(e)
         return str(e)
@@ -340,7 +336,6 @@ async def get_person_table(guild: str) -> str:
                     .replace("2", "Neutral")
                 )
                 results_string += "\n"
-            
             send_message_to_website(results_string)
             results_string = "```" + results_string + "```"
             return results_string
@@ -381,7 +376,6 @@ async def get_characters_table(guild: str, character_class: str) -> str:
         character_class = "Magician"
     if character_class and character_class.lower() in ['shadowknight', 'shadow knight']:
         character_class = "Shadowknight"
-    
     if character_class and character_class not in class_names:
         return f'Invalid input. Please provide a valid class name: {str(class_names)}'
 
@@ -435,11 +429,9 @@ async def parse_image(message: dict):
                 image_raw = await attachment.read()
                 image = Image.open(BytesIO(image_raw))
                 image_url = attachment.url
-
                 extracted_text = pytesseract.image_to_string(image)
 
     pattern = r"\[[^\]]+\] ([^\s<]+)"
-
     char_names = re.findall(pattern, extracted_text)
 
     for i in range(len(char_names)):
@@ -454,7 +446,6 @@ async def parse_image(message: dict):
         char_names[i] = char_name
 
     try:
-        
         c = bot.db_connection.cursor()
         placeholders = ",".join(["?"] * len(char_names))
         query = f"""SELECT a.char_name, a.char_class, a.person_name, a.level, b.relation 

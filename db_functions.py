@@ -135,9 +135,7 @@ def create_tables():
         print('db_migration.create_tables() error:')
         print(e)
         return str(e)
-    finally:
-        conn.close()
-
+   
 # Used to migrate the old tables into the new schema (descrated):
 def migrate_players_db():
     try:
@@ -153,9 +151,7 @@ def migrate_players_db():
         print('db_migration.migrate_players_db() error:')
         print(e)
         return str(e)
-    finally:
-        conn.close()
-
+    
 # Used to migrate the old tables into the new schema (desecrated):
 def migrate_characters_db():
     try:
@@ -169,5 +165,4 @@ def migrate_characters_db():
         print('Characters_db to character migration complete!')
     except Exception as e:
         print('db_migration.migrate_characters_db complete!')
-    finally:
-        conn.close()
+

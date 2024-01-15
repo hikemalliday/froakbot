@@ -8,7 +8,6 @@ import pytesseract
 import pytesseract
 import helper
 from datetime import datetime
-
 from PIL import Image
 from io import BytesIO
 import re
@@ -17,8 +16,9 @@ import db_functions
 db_path = env('DB_PATH')
 url = env('URL')
 
+# Move this to helper.py
 def send_message_to_website(message: dict=None, image_url=None):
-    payload = {'date': str(datetime.datetime.now()), 
+    payload = {'date': str(datetime.now().strftime("%m-%d-%Y")), 
                'message': None, 
                'image_url': None}
     if message:
@@ -569,13 +569,13 @@ async def parse_image(message: dict):
         print(e)
         return str(e)
     
-async def item_search(user_input: str) -> str:
-    if user_input:
+async def item_search(item_name: str) -> str:
+    if item_name:
         try:
             db_functions.create_levenshtein_function(bot)
             c = bot.db_connection.cursor()
             # Attempt to find exact string match first:
-            c.execute('''SELECT * FROM items_master WHERE name = ?''', (user_input,))
+            c.execute('''SELECT * FROM items_master WHERE name = ?''', (item_name,))
             results = c.fetchall()
             if results and results[0][1]:
                 print('Exact string found:')
@@ -587,35 +587,61 @@ async def item_search(user_input: str) -> str:
                     FROM (
                     SELECT * FROM items_master WHERE name LIKE ? || '%'
                     ) AS subquery
-                    WHERE levenshtein(subquery.name, ?) <= 20;''', (user_input, user_input))
+                    WHERE levenshtein(subquery.name, ?) <= 20;''', (item_name, item_name))
                 results = c.fetchall()
                 print('Query results: ' + str(results))
                 if results and results[0][1]:
                     print('Levenshtein search:')
                     print(results[0][1])
                     send_message_to_website(f'Item found: {results[0][1]}' )
-                return results
+                if results:
+                    return results
+                else:
+                    return f'Couldnt find item: "{item_name}"'
         except Exception as e:
             print(e)
 
-async def add_raid(guild: object, raid_name: str):
+async def register_person(person_name: str, discord_username: str):
+    # Create a 'discord_username' table
+    pass
+
+async def add_raid_event(guild: object, raid_name: str):
     try:
         timestamp = datetime.now().strftime("%m-%d-%Y")
-        print(timestamp)
         raiders = await helper.get_most_populated_channel(guild)
+        if raiders is None:
+            return 'There are no members in any voice channels.'
+        
         c = bot.db_connection.cursor()
         c.execute('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
-        bot.db_connection.commit()
         raid_id = c.lastrowid
-        for raider in raiders:
-            c.execute('''INSERT INTO dkp_test (person_name, raid_id) VALUES (?, ?)''', (raider, raid_id))
+        
+        raider_inserts = [(raider, raid_id, 1) for raider in raiders]
+        c.executemany('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', raider_inserts)
+        bot.db_connection.commit()
         return 'Raid successfully added'
     except Exception as e:
         print(e)
         return str(e)
+
+async def add_person_to_raid(person_name: str, raid_id: int):
+    try:
+        c = bot.db_connection.cursor()
+        c.execute('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', (person_name, raid_id, 1))
+        bot.db_connection.commit()
+        message = f'Person {person_name} added to raid: {raid_id}.'
+        send_message_to_website(message)
+        return message
+    except Exception as e:
+        print(e)
+        return str(e)
     
-# in order to automate re-freshing of test tables:
-# Drop all test tables, recreate test tables
+
+
+    
+    
+
+
 
         
     

@@ -95,8 +95,9 @@ async def parse_image(message: dict):
     await logic.parse_image(message)
 
 @app_commands.command(name='item_search')
-async def item_search(interaction: discord.Interaction, user_input: str):
-    results = await logic.item_search(user_input)
+@app_commands.describe(item_name='Enter an item name')
+async def item_search(interaction: discord.Interaction, item_name: str):
+    results = await logic.item_search(item_name)
     await interaction.response.send_message(results)
 
 @app_commands.command(name='biggest_channel')
@@ -107,13 +108,28 @@ async def get_most_populated_channel(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("Error (biggest_channel): no guild passed.")
 
-@app_commands.command(name='add_raid')
-async def add_raid(interaction: discord.Interaction, raid_name: str):
+@app_commands.command(name='add_raid_event')
+@app_commands.describe(raid_name='Enter a raid name')
+async def add_raid_event(interaction: discord.Interaction, raid_name: str):
     if interaction.guild:
-        results = await logic.add_raid(interaction.guild, raid_name)
+        results = await logic.add_raid_event(interaction.guild, raid_name)
         await interaction.response.send_message(results)
     else:
         await interaction.response.send_message("Error (add_raid): no guild passed.")
+
+@app_commands.command(name='add_person_to_raid')
+@app_commands.describe(person_name='Enter person', raid_id='Enter raid id')
+async def add_person_to_raid(interaction: discord.Interaction, person_name: str, raid_id: int):
+    results = await logic.add_person_to_raid(person_name, raid_id)
+    await interaction.response.send_message(results)
+   
+@add_person_to_raid.autocomplete('raid_id')
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
+    raid_names = await helper.fetch_raid_names(current)
+    if raid_names is None:
+        return ['No raids of that name found.']
+    choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
+    return choices
 
 slash_commands = [
     add_person, 
@@ -128,5 +144,6 @@ slash_commands = [
     get_characters_table, 
     item_search,
     get_most_populated_channel,
-    add_raid
+    add_raid_event,
+    add_person_to_raid
     ]

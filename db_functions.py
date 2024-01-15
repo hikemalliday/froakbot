@@ -1,8 +1,11 @@
 import Levenshtein
-import sqlite3
 import mysql.connector
 from decouple import config as env
+from datetime import datetime
  
+# The term 'test' in this module does not imply tradional unit or end to end tests, its for creating test tables that I can read / write
+
+
 def levenshtein_distance(string1, string2):
     return Levenshtein.distance(string1, string2)
 
@@ -87,6 +90,20 @@ def migrate_players_db(bot: object):
         print('db_migration.migrate_players_db() error:')
         print(e)
         return str(e)
+
+def migrate_players_db_test(bot: object):
+    try:
+        c = bot.db_connection.cursor()
+        query = """INSERT INTO person_test (person_name, relation, guild)
+                SELECT player_name, relation, guild
+                FROM Players_db"""
+        c.execute(query)
+        bot.db_connection.commit()
+        print('Players_db to person migration complete!')
+    except Exception as e:
+        print('db_migration.migrate_players_db() error:')
+        print(e)
+        return str(e)
     
 # Used to migrate the old tables into the new schema (desecrated):
 def migrate_characters_db(bot: object):
@@ -99,7 +116,19 @@ def migrate_characters_db(bot: object):
         bot.db_connection.commit()
         print('Characters_db to character migration complete!')
     except Exception as e:
-        print('db_migration.migrate_characters_db complete!')
+        print('migrate_characters_db error: ', str(e))
+
+def migrate_characters_db_test(bot: object):
+    try:
+        c = bot.db_connection.cursor()
+        query = """INSERT INTO character_test (char_name, char_class, person_name, level)
+                SELECT char_name, char_class, player_name, level
+                FROM Characters_db"""
+        c.execute(query)
+        bot.db_connection.commit()
+        print('Characters_db to character_test migration complete!')
+    except Exception as e:
+        print('migrate_characters_db_test error', str(e))
 
 def create_tables(bot: object):
     sql_person_table = """CREATE Table IF NOT EXISTS person (
@@ -136,7 +165,8 @@ def create_tables(bot: object):
                     person_name TEXT,
                     raid_id INTEGER,
                     FOREIGN KEY (person_name) REFERENCES person(person_name),
-                    FOREIGN KEY (raid_id) REFERENCES raids_master(raid_id)
+                    FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id),
+                    UNIQUE(person_name, raid_id)
     )"""
 
     sql_raid_ra_table = """CREATE Table IF NOT EXISTS raid_ra (
@@ -162,22 +192,6 @@ def create_tables(bot: object):
         print(e)
         return str(e)
 
-def drop_tables(bot: object):
-    try:
-        c = bot.db_connection.cursor()
-        c.execute('''DROP TABLE person;''')
-        c.execute('''DROP TABLE person_loot;''')
-        c.execute('''DROP TABLE raid_master;''')
-        c.execute('''DROP TABLE character;''')
-        c.execute('''DROP TABLE dkp;''')
-        c.execute('''DROP TABLE raid_ra;''')
-        bot.db_connection.commit()
-        print('TABLES DROPPED')
-        
-    except Exception as e:
-        print('reset_tables() error: ', str(e))
-        return str(e)
-    
 def create_test_tables(bot: object):
     sql_person_table_test = """CREATE Table IF NOT EXISTS person_test (
                         person_name TEXT PRIMARY KEY,
@@ -190,7 +204,7 @@ def create_test_tables(bot: object):
                           char_class TEXT NOT NULL,
                           person_name text,
                           level INTEGER,
-                          FOREIGN KEY (person_name) REFERENCES person(person_name)
+                          FOREIGN KEY (person_name) REFERENCES person_test(person_name)
     )"""
 
     sql_raid_master_table_test = """CREATE Table IF NOT EXISTS raid_master_test (
@@ -204,8 +218,8 @@ def create_test_tables(bot: object):
                             person_name TEXT,
                             item_name TEXT,
                             raid_id INTEGER,
-                            FOREIGN KEY (person_name) REFERENCES person(person_name),
-                            FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id)
+                            FOREIGN KEY (person_name) REFERENCES person_test(person_name),
+                            FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id)
     )"""
 
     sql_dkp_table_test = """CREATE Table IF NOT EXISTS dkp_test (
@@ -213,16 +227,17 @@ def create_test_tables(bot: object):
                     person_name TEXT,
                     raid_id INTEGER,
                     dkp_points INTEGER,
-                    FOREIGN KEY (person_name) REFERENCES person(person_name),
-                    FOREIGN KEY (raid_id) REFERENCES raids_master(raid_id)
+                    FOREIGN KEY (person_name) REFERENCES person_test(person_name),
+                    FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id)
     )"""
 
     sql_raid_ra_table_test = """CREATE Table IF NOT EXISTS raid_ra_test (
                         entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
                         person_name TEXT,
                         raid_id INTEGER,
-                        FOREIGN KEY (person_name) REFERENCES person(person_name),
-                        FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id)
+                        FOREIGN KEY (person_name) REFERENCES person_test(person_name),
+                        FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id),
+                        UNIQUE(person_name, raid_id)
     )"""
 
     try:
@@ -240,6 +255,22 @@ def create_test_tables(bot: object):
         print(e)
         return str(e)
 
+def drop_tables(bot: object):
+    try:
+        c = bot.db_connection.cursor()
+        c.execute('''DROP TABLE person;''')
+        c.execute('''DROP TABLE person_loot;''')
+        c.execute('''DROP TABLE raid_master;''')
+        c.execute('''DROP TABLE character;''')
+        c.execute('''DROP TABLE dkp;''')
+        c.execute('''DROP TABLE raid_ra;''')
+        bot.db_connection.commit()
+        print('TABLES DROPPED')
+        
+    except Exception as e:
+        print('reset_tables() error: ', str(e))
+        return str(e)
+    
 def drop_test_tables(bot: object):
     try:
         c = bot.db_connection.cursor()
@@ -255,12 +286,48 @@ def drop_test_tables(bot: object):
         print('reset_tables() error, couldnt drop tables: ', str(e))
         return str(e)
 
+def reset_tables(bot: object):
+    try:
+        drop_tables(bot)
+        create_tables(bot)
+        migrate_players_db(bot)
+        migrate_characters_db(bot)
+    except Exception as e:
+        print(e)
+        return str(e)
+
 def reset_test_tables(bot: object):
     try:
         drop_test_tables(bot)
         create_test_tables(bot)
+        migrate_players_db_test(bot)
+        migrate_characters_db_test(bot)
+        add_mock_rows_raid_master_test(bot)
     except Exception as e:
         print('Couldnt reset test tables: ', str(e))
         return
     
+async def add_mock_rows_raid_master_test(bot: object):
+    try:
+        date_time = datetime.now().strftime("%m-%d-%Y")
+        mock_rows = [
+            ("Veeshan's Peak", date_time)
+            ("Golems",  date_time)
+            ("Plane of Hate", date_time)
+            ("Plane of Sky", date_time)
+            ("Halls of Testing", date_time)
+            ("Klandicar", date_time)
+            ("Royals", date_time)
+            ("Veeshan's Peak", date_time)
+            ("Dracholiche", date_time)
+            ("Golems + Dracho", date_time)
+            ("Halls of Testing", date_time)
+                     ]
+        conn = bot.db_connection
+        c = conn.cursor()
+        c.executemany('''INSERT INTO raid_master_test (raid_name, raid_date)''', (mock_rows,))
+        conn.commit()
+    except Exception as e:
+        print(e)
+        return e
 

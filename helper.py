@@ -1,5 +1,6 @@
 import discord
 import data.config as config
+from bot.bot_instance import bot
 
 def add_person_embed(person_name: str, relation: int, guild: str) -> object:
     if relation == 0:
@@ -41,5 +42,26 @@ async def get_most_populated_channel(guild):
         print('Raiders: ', str(raiders))
         return raiders
     else:
-        return "There are no members in any voice channels."
+        print("There are no members in any voice channels.")
+        return None
+    
+async def fetch_raid_names(raid_name: str):
+    try:
+        print('fetch_raid_names test')
+        like_pattern = f'{raid_name}%'
+        c = bot.db_connection.cursor()
+        c.execute('''SELECT * FROM raid_master_test WHERE raid_name LIKE ?''', (like_pattern,))
+        bot.db_connection.commit()
+        results = c.fetchall()
+        if results:
+            print('results return test, fetch_raid_names')
+            results = [result for result in results]
+            return results
+        else:
+            print('No results found (fetch_raid_names)')
+            return None
+    except Exception as e:
+        print(e)
+        return None
+
     

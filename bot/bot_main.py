@@ -17,7 +17,7 @@ def run_discord_bot():
         bot.db_connection = db.connection
         @bot.event
         async def on_ready():
-            #db_functions.reset_test_tables(bot)
+            db_functions.reset_test_tables(bot)
             # db_functions.reset_tables(bot)
             print('Bot is Up and Ready!')
             try:

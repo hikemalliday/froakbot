@@ -228,7 +228,8 @@ def create_test_tables(bot: object):
                     raid_id INTEGER,
                     dkp_points INTEGER,
                     FOREIGN KEY (person_name) REFERENCES person_test(person_name),
-                    FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id)
+                    FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id),
+                    UNIQUE(person_name, raid_id)
     )"""
 
     sql_raid_ra_table_test = """CREATE Table IF NOT EXISTS raid_ra_test (
@@ -237,7 +238,7 @@ def create_test_tables(bot: object):
                         raid_id INTEGER,
                         FOREIGN KEY (person_name) REFERENCES person_test(person_name),
                         FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id),
-                        UNIQUE(person_name, raid_id)
+                        
     )"""
 
     try:
@@ -303,31 +304,157 @@ def reset_test_tables(bot: object):
         migrate_players_db_test(bot)
         migrate_characters_db_test(bot)
         add_mock_rows_raid_master_test(bot)
+        add_mock_rows_dkp_test(bot)
     except Exception as e:
         print('Couldnt reset test tables: ', str(e))
         return
     
-async def add_mock_rows_raid_master_test(bot: object):
+def add_mock_rows_raid_master_test(bot: object):
     try:
         date_time = datetime.now().strftime("%m-%d-%Y")
         mock_rows = [
-            ("Veeshan's Peak", date_time)
-            ("Golems",  date_time)
-            ("Plane of Hate", date_time)
-            ("Plane of Sky", date_time)
-            ("Halls of Testing", date_time)
-            ("Klandicar", date_time)
-            ("Royals", date_time)
-            ("Veeshan's Peak", date_time)
-            ("Dracholiche", date_time)
-            ("Golems + Dracho", date_time)
-            ("Halls of Testing", date_time)
+            ("Veeshan's Peak", date_time),
+            ("Golems",  date_time),
+            ("Plane of Hate", date_time),
+            ("Plane of Sky", date_time),
+            ("Halls of Testing", date_time),
+            ("Klandicar", date_time),
+            ("Royals", date_time),
+            ("Veeshan's Peak", date_time),
+            ("Dracholiche", date_time),
+            ("Golems + Dracho", date_time),
+            ("Halls of Testing", date_time),
                      ]
         conn = bot.db_connection
         c = conn.cursor()
-        c.executemany('''INSERT INTO raid_master_test (raid_name, raid_date)''', (mock_rows,))
+        c.executemany('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (mock_rows))
         conn.commit()
+        print('add_mock_rows_raid_master_test() success.')
     except Exception as e:
-        print(e)
+        print('add_mock_rows_raid_master_test() error:' , str(e))
         return e
+
+def add_mock_rows_dkp_test(bot: object):
+    try:
+      mock_rows = [
+          ('Sharknado', 1, 1),
+          ('Threepeat', 1, 1),
+          ('Choopa', 1, 1),
+          ('Slarti', 1, 1),
+          ('Filpox', 1, 1),
+          ('Norrix', 1, 1),
+          ('Tune', 1, 1),
+          ('Bodied', 1, 1),
+          ('Kilbur', 1, 1),
+          ('Ivah', 1, 1),
+          ('Grixus', 1, 1),
+          ('Sharknado', 2, 1),
+          ('Threepeat', 2, 1),
+          ('Choopa', 2, 1),
+          ('Slarti', 2, 1),
+          ('Filpox', 2, 1),
+          ('Norrix', 2, 1),
+          ('Tune', 2, 1),
+          ('Bodied', 2, 1),
+          ('Kilbur', 2, 1),
+          ('Ivah', 2, 1),
+          ('Grixus', 2, 1),
+          ('Sharknado', 3, 1),
+          ('Threepeat', 3, 1),
+          ('Choopa', 3, 1),
+          ('Slarti', 3, 1),
+          ('Filpox', 3, 1),
+          ('Norrix', 3, 1),
+          ('Tune', 3, 1),
+          ('Bodied', 3, 1),
+          ('Kilbur', 3, 1),
+          ('Ivah', 3, 1),
+          ('Grixus', 3, 1),
+          ('Sharknado', 4, 1),
+          ('Threepeat', 4, 1),
+          ('Choopa', 4, 1),
+          ('Slarti', 4, 1),
+          ('Filpox', 4, 1),
+          ('Norrix', 4, 1),
+          ('Tune', 4, 1),
+          ('Bodied', 4, 1),
+          ('Kilbur', 4, 1),
+          ('Ivah', 4, 1),
+          ('Grixus', 4, 1),
+          ('Sharknado', 5, 1),
+          ('Threepeat', 5, 1),
+          ('Choopa', 5, 1),
+          ('Slarti', 5, 1),
+          ('Filpox', 5, 1),
+          ('Norrix', 5, 1),
+          ('Tune', 5, 1),
+          ('Bodied', 5, 1),
+          ('Kilbur', 5, 1),
+          ('Ivah', 5, 1),
+          ('Grixus', 5, 1),
+          ('Sharknado', 6, 1),
+          ('Threepeat',6, 1),
+          ('Choopa', 6, 1),
+          ('Slarti', 6, 1),
+          ('Filpox', 6, 1),
+          ('Norrix', 6, 1),
+          ('Tune', 6, 1),
+          ('Bodied', 6, 1),
+          ('Kilbur', 6, 1),
+          ('Ivah', 6, 1),
+          ('Grixus', 6, 1),
+          ('Sharknado', 7, 1),
+          ('Threepeat', 7, 1),
+          ('Choopa', 7, 1),
+          ('Slarti', 7, 1),
+          ('Filpox', 7, 1),
+          ('Norrix', 7, 1),
+          ('Tune', 7, 1),
+          ('Bodied', 7, 1),
+          ('Kilbur', 7, 1),
+          ('Ivah', 7, 1),
+          ('Grixus', 7, 1),
+          ('Sharknado', 8, 1),
+          ('Threepeat', 8, 1),
+          ('Choopa', 8, 1),
+          ('Slarti', 8, 1),
+          ('Filpox', 8, 1),
+          ('Norrix', 8, 1),
+          ('Tune', 8, 1),
+          ('Bodied', 8, 1),
+          ('Kilbur', 8, 1),
+          ('Ivah', 8, 1),
+          ('Grixus', 8, 1),
+          ('Sharknado', 9, 1),
+          ('Threepeat', 9, 1),
+          ('Choopa', 9, 1),
+          ('Slarti', 9, 1),
+          ('Filpox', 9, 1),
+          ('Norrix', 9, 1),
+          ('Tune', 9, 1),
+          ('Bodied', 9, 1),
+          ('Kilbur', 9, 1),
+          ('Ivah', 9, 1),
+          ('Grixus', 9, 1),
+          ('Sharknado', 10, 1),
+          ('Threepeat', 10, 1),
+          ('Choopa', 10, 1),
+          ('Slarti', 10, 1),
+          ('Filpox', 10, 1),
+          ('Norrix', 10, 1),
+          ('Tune', 10, 1),
+          ('Bodied', 10, 1),
+          ('Kilbur', 10, 1),
+          ('Ivah', 10, 1),
+          ('Grixus', 10, 1)
+      ]
+      conn = bot.db_connection
+      c = conn.cursor()
+      c.executemany('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', (mock_rows))
+      conn.commit()
+      print('add_mock_rows_dkp_test() success.')
+    except Exception as e:
+        print('add_mock_rows_dkp_test() error: ', str(e))
+        return str(e)
+
 

@@ -6,6 +6,10 @@
 
 Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
 
+Froakbot is not only a DKP / Loot tracking bot, but has an image parsing feature than returns data about the game state.
+
+### Image Parser:
+
 The discord bot parses an image of the character names in a zone:
 
 ![alt text](https://cdn.discordapp.com/attachments/617825237752479751/1175861016316358656/image.png?ex=656cc4e8&is=655a4fe8&hm=064098870915b8f663045b87ebcfa378e0cafa5d5a14762bdc3cd8ca84e5a3d7&)

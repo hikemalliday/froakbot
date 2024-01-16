@@ -95,15 +95,6 @@ async def get_characters_table(interaction: discord.Interaction, guild: str = No
 async def parse_image(message: dict):
     await logic.parse_image(message)
 
-# DESECRATED
-# @app_commands.command(name='biggest_channel')
-# async def get_most_populated_channel(interaction: discord.Interaction):
-#     if interaction.guild:
-#         results = await helper.get_most_populated_channel(interaction.guild)
-#         await interaction.response.send_message(results)
-#     else:
-#         await interaction.response.send_message("Error (biggest_channel): no guild passed.")
-
 @app_commands.command(name='add_raid_event')
 @app_commands.describe(raid_name='Enter a raid name')
 async def add_raid_event(interaction: discord.Interaction, raid_name: str):
@@ -187,6 +178,18 @@ async def person_name_autocompletion(interaction: discord.Interaction, current: 
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.raid_name_autocompletion(interaction, current)
 
+@app_commands.command(name='register_person')
+@app_commands.describe(person_name='Enter person')
+async def register_person(interaction: discord.Interaction, person_name: str):  
+    results = await logic.register_person(person_name)
+    await interaction.response.send_message(results)
+
+@register_person.autocomplete('person_name')
+async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    return await helper.person_name_autocompletion(interaction, current)
+
+
+
 slash_commands = [
     add_person, 
     add_character, 
@@ -198,11 +201,11 @@ slash_commands = [
     get_characters, 
     get_person_table, 
     get_characters_table, 
-    get_most_populated_channel,
     add_raid_event,
     add_person_to_raid,
     delete_raid_event,
     delete_person_from_raid,
     award_loot,
     remove_loot,
+    register_person
     ]

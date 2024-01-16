@@ -28,12 +28,13 @@ async def add_person(person_name: str, relation: str, guild: str) -> object:
     guild = guild.title()
     
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        c = conn.cursor()
         c.execute(
             """INSERT INTO person (person_name, relation, guild) VALUES (?, ?, ?)""",
             ((person_name, relation, guild)),
         )
-        bot.db_connection.commit()
+        conn.commit()
         message = (
             f'```Player "{person_name}" successfully inserted into "person" table.```'
         )
@@ -58,7 +59,8 @@ async def add_character(character_name: str, character_class: str, level: int, p
         return f'Invalid input. Please provide a valid class name: {str(class_names)}'
     
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        c = conn.cursor()
         c.execute("SELECT * FROM person WHERE person_name = ?", (person_name,))
         if not c.fetchall():
             message = f'```Person "{person_name}" does not exist in "person" table. Please create a "person" entry first. Aborting insert.```'
@@ -77,7 +79,7 @@ async def add_character(character_name: str, character_class: str, level: int, p
             "INSERT INTO character (char_name, char_class, person_name, level) VALUES (?, ?, ?, ?)",
             (character_name, character_class, person_name, level),
         )
-        bot.db_connection.commit()
+        conn.commit()
 
         c.execute("SELECT * FROM character WHERE char_name = ?", (character_name,))
         result = c.fetchone()
@@ -94,9 +96,10 @@ async def add_character(character_name: str, character_class: str, level: int, p
 async def delete_person(person_name: str) -> str:
     person_name = person_name.title()
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        c = conn.cursor()
         c.execute("""DELETE FROM person WHERE person_name = ?""", (person_name,))
-        bot.db_connection.commit()
+        conn.commit()
         if c.rowcount > 0:
             message = f'```Person "{person_name}" successfully deleted!```'
             helper.send_message_to_website(message)
@@ -112,9 +115,10 @@ async def delete_person(person_name: str) -> str:
 async def delete_character(character_name: str) -> str:
     character_name = character_name.title()
     try:
+        conn = bot.db_connection
         c = bot.db_connection.cursor()
         c.execute("""DELETE FROM character WHERE char_name = ?""", (character_name,))
-        bot.db_connection.commit()
+        conn.commit()
 
         if c.rowcount > 0:
             message = f'```Character "{character_name}" successfully deleted!```'
@@ -144,12 +148,13 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
     guild = guild.title()
 
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        c = conn.cursor()
         c.execute(
             """SELECT * FROM person WHERE person_name = ?""", (person_name,)
         )
         results = c.fetchall()
-        bot.db_connection.commit()
+        conn.commit()
 
         if not results:
             message = f'```Person "{person_name}" does not exist in "person" table. Aborting EDIT.```'
@@ -165,7 +170,7 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
             (person_name_new, relation, guild, person_name),
         )
         results = c.fetchall()
-        bot.db_connection.commit()
+        conn.commit()
         
         if relation == 0:
             relation = "Enemy"
@@ -193,8 +198,8 @@ async def edit_character(character_name: str, character_name_new: str, character
         return f'Invalid input. Please provide a valid class name: {str(class_names)}'
 
     try:
-        
-        c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        c = conn.cursor()
         c.execute(
             """SELECT * FROM character WHERE char_name = ?""", (character_name,)
         )
@@ -216,7 +221,7 @@ async def edit_character(character_name: str, character_name_new: str, character
             (character_name_new, character_class, person_name, level, character_name),
         )
         results = c.fetchall()
-        bot.db_connection.commit()
+        conn.commit()
         message = f"```Character CHANGED: char_name = {character_name_new}, char_class = {character_class}, person_name = {person_name}, level = {level}```"
         helper.send_message_to_website(message)
         return message
@@ -228,7 +233,8 @@ async def who(character_name: str) -> str:
     character_name = character_name.title()
 
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_commands
+        c = conn.cursor()
         c.execute("""SELECT * FROM character WHERE char_name = ?""", (character_name,))
         results = c.fetchone()
 
@@ -239,7 +245,7 @@ async def who(character_name: str) -> str:
         char_class = results[1]
         person_name = results[2]
 
-        c2 = bot.db_connection.cursor()
+        c2 = conn.cursor()
         c2.execute("""SELECT * from person WHERE person_name = ?""", (person_name,))
         results = c2.fetchone()
 
@@ -266,7 +272,8 @@ async def who(character_name: str) -> str:
 async def get_characters(person_name: str) -> str:
     person_name = person_name.title()
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_commands
+        c = conn.cursor()
         c.execute(
             """SELECT * FROM character WHERE person_name = ?""", (person_name,)
         )
@@ -289,7 +296,7 @@ async def get_person_table(guild: str) -> str:
     if guild:
         guild = guild.title()
         try:
-            c = bot.db_connection.cursor()
+            c = conn.cursor()
             c.execute("""SELECT * FROM person WHERE guild = ?""", (guild,))
             results = c.fetchall()
             sorted_results = sorted(results, key=lambda result: result[0])
@@ -313,7 +320,7 @@ async def get_person_table(guild: str) -> str:
             return str(e)
     else:
         try:
-            c = bot.db_connection.cursor()
+            c = conn.cursor()
             c.execute("""SELECT * FROM person""")
             results = c.fetchall()
             sorted_results = sorted(results, key=lambda result: result[0])
@@ -349,7 +356,8 @@ async def get_characters_table(guild: str, character_class: str) -> str:
         return f'Invalid input. Please provide a valid class name: {str(class_names)}'
 
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        c = conn.cursor()
         if character_class and guild:
             c.execute(
                 """SELECT * FROM character
@@ -415,7 +423,8 @@ async def parse_image(message: dict):
         char_names[i] = char_name
 
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        c = conn.cursor()
         placeholders = ",".join(["?"] * len(char_names))
         query = f"""SELECT a.char_name, a.char_class, a.person_name, a.level, b.relation 
             FROM character a INNER JOIN person b 
@@ -547,8 +556,9 @@ async def add_raid_event(guild: object, raid_name: str):
         if raiders is None:
             return 'There are no members in any voice channels.'
         
-        with bot.db_connection:
-            c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        with conn:
+            c = conn.cursor()
             c.execute('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
             c.execute('''INSERT INTO raid_master_test_backup (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
             raid_id = c.lastrowid
@@ -556,7 +566,7 @@ async def add_raid_event(guild: object, raid_name: str):
             raider_inserts = [(raider, raid_id, 1) for raider in raiders]
             c.executemany('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', raider_inserts)
             c.executemany('''INSERT INTO dkp_test_backup (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', raider_inserts)
-            bot.db_connection.commit()
+            conn.commit()
         return 'Raid successfully added'
     except Exception as e:
         print('add_raid_event():', str(e))
@@ -578,7 +588,7 @@ async def delete_raid_event(raid_id: int):
             c.execute('''DELETE FROM raid_master_test_backup WHERE raid_id = ?''', (raid_id,))
             c.execute('''DELETE FROM dkp_test WHERE raid_id = ?''', (raid_id,))
             c.execute('''DELETE FROM dkp_test_backup WHERE raid_id = ?''', (raid_id,))
-            bot.db_connection.commit()
+            conn.commit()
             message = f'Raid deleted: {raid_name}, {raid_date}.'
             helper.send_message_to_website(message)
             return message
@@ -588,14 +598,15 @@ async def delete_raid_event(raid_id: int):
 
 async def add_person_to_raid(person_name: str, raid_id: int):
     try:
-        c = bot.db_connection.cursor()
+        conn = bot.db_connection
+        c = conn.cursor()
         # SELECT first to make sure char exists
         c.execute('''SELECT person_name FROM person_test WHERE person_name = ?''', (person_name,))
         result = c.fetchone()
         if not result:
             return f'Person {person_name} not found.'
         c.execute('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', (person_name, raid_id, 1))
-        bot.db_connection.commit()
+        conn.commit()
         message = f'Person {person_name} added to raid: {raid_id}.'
         helper.send_message_to_website(message)
         return message
@@ -623,7 +634,7 @@ async def delete_person_from_raid(person_name: str, raid_id: int):
             
             c.execute('''DELETE FROM dkp_test WHERE person_name = ?''', (person_name,))
             c.execute('''DELETE FROM dkp_test_backup WHERE person_name = ?''', (person_name,))
-            bot.db_connection.commit()
+            conn.commit()
             message = f'{person_name} removed from: {raid_name}, {raid_date}.'
             helper.send_message_to_website(message)
             return message
@@ -658,6 +669,7 @@ async def award_loot(item_name: str, person_name: str, raid_id: int):
         error_message = f'logic.award_item() error: {e}'
         print(error_message)
         return error_message
+    
 async def remove_loot(item_name: str, person_name: str, raid_id: int):
     try:
         conn = bot.db_connection

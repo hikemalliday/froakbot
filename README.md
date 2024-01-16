@@ -4,8 +4,6 @@
 ##### Docker Hub:
 [https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/r/hikemalliday/froakbot)
 
-###### Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
-
 Froakbot is not only a DKP / Loot tracking bot, but also has an image parsing feature than returns data about the game state.
 
 ### Image Parser:
@@ -23,8 +21,6 @@ The bot parses the image and compares the character names to a SQLite database (
 Also contains basic CRUD commands for search of character data.
 
 # Dev Notes:
-
-Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
 
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
 

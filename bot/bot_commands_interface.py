@@ -3,6 +3,7 @@ import discord
 import bot.bot_commands_logic as logic
 from discord import app_commands
 import helper
+selected_raid_id = None
 
 @app_commands.command(name='add_person')
 @app_commands.describe(person_name='Enter a person name', relation='Enter relation status', guild='Enter a guild')
@@ -100,6 +101,8 @@ async def item_search(interaction: discord.Interaction, item_name: str):
     results = await logic.item_search(item_name)
     await interaction.response.send_message(results)
 
+
+
 @app_commands.command(name='biggest_channel')
 async def get_most_populated_channel(interaction: discord.Interaction):
     if interaction.guild:
@@ -120,16 +123,66 @@ async def add_raid_event(interaction: discord.Interaction, raid_name: str):
 @app_commands.command(name='add_person_to_raid')
 @app_commands.describe(person_name='Enter person', raid_id='Enter raid id')
 async def add_person_to_raid(interaction: discord.Interaction, person_name: str, raid_id: int):
+    print('interface.add_person_to_raid() start')
     results = await logic.add_person_to_raid(person_name, raid_id)
     await interaction.response.send_message(results)
    
 @add_person_to_raid.autocomplete('raid_id')
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
+    print('interface.raid_name_autocompletion() start')
+    raid_names = await helper.fetch_raid_names(current)
+    print('interface.raid_name_autocompletion() 1')
+    if raid_names is None:
+        return ['No raids of that name found.']
+    choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
+    return choices
+
+@add_person_to_raid.autocomplete('person_name')
+async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    person_names = await helper.fetch_raider_names(current)
+    if person_names is None:
+        return ['/add_person_to_raid.person_name_autocompletion() error.']
+    choices = [discord.app_commands.Choice(name=name, value=name) for name in person_names]
+    return choices
+
+# Need to fetch pulldown for this, and delete raid_master, raid_master_backup, dkp, dkp_backup 
+@app_commands.command(name='delete_raid_event')
+@app_commands.describe(raid_id='Enter raid id')
+async def delete_raid_event(interaction: discord.Interaction, raid_id: int):
+    results = await logic.delete_raid_event(raid_id)
+    await interaction.response.send_message(results)
+   
+@delete_raid_event.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
     raid_names = await helper.fetch_raid_names(current)
     if raid_names is None:
         return ['No raids of that name found.']
     choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
     return choices
+
+@app_commands.command(name='delete_person_from_raid')
+@app_commands.describe(raid_id='Enter raid id', person_name='Enter person')
+async def delete_person_from_raid(interaction: discord.Interaction, person_name: str, raid_id: int):  
+    results = await logic.delete_person_from_raid(person_name, raid_id)
+    print('delete_person_from_raid() results: ', )
+    await interaction.response.send_message(results)
+   
+@delete_person_from_raid.autocomplete('person_name')
+async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    person_names = await helper.fetch_raider_names(current)
+    if person_names is None:
+        return ['Raid has no raiders.']
+    choices = [discord.app_commands.Choice(name=name, value=name) for name in person_names]
+    return choices
+
+@delete_person_from_raid.autocomplete('raid_id')
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
+    raid_names = await helper.fetch_raid_names(current)
+    if raid_names is None:
+        return ['No raids of that name found.']
+    choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
+    return choices
+
 
 slash_commands = [
     add_person, 
@@ -145,5 +198,7 @@ slash_commands = [
     item_search,
     get_most_populated_channel,
     add_raid_event,
-    add_person_to_raid
+    add_person_to_raid,
+    delete_raid_event,
+    delete_person_from_raid
     ]

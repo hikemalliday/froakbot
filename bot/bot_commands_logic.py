@@ -1,9 +1,7 @@
 # V2 (clas commands API)
 from data.char_classes import class_names, emojis
 from decouple import config as env
-import json
-import datetime
-import requests
+
 import pytesseract
 import pytesseract
 import helper
@@ -16,33 +14,6 @@ import db_functions
 db_path = env('DB_PATH')
 url = env('URL')
 
-# Move this to helper.py
-def send_message_to_website(message: dict=None, image_url=None):
-    payload = {'date': str(datetime.now().strftime("%m-%d-%Y")), 
-               'message': None, 
-               'image_url': None}
-    if message:
-        message = (
-            message.replace("[0;31;40m", "")
-            .replace("[0;36;40m", "")
-            .replace("[0;37;40m", "")
-            .replace("ansi", "")
-            .replace("`", "")
-        )
-        payload['message'] = message
-    if image_url:
-        payload['image_url'] = image_url
-    if payload:
-        try:
-            response = requests.post(url, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
-            if response.status_code == 201:
-                print('JSON payload sent successfully')
-            else:
-                print('Failed to send JSON payload.')
-        except Exception as e:
-            print(str(e))
-            return str(e)
-    
 async def add_person(person_name: str, relation: str, guild: str) -> object:
     if relation.lower() in ['enemy', 'foe', 'opponent']:
         relation = 0
@@ -66,16 +37,15 @@ async def add_person(person_name: str, relation: str, guild: str) -> object:
         message = (
             f'```Player "{person_name}" successfully inserted into "person" table.```'
         )
-        send_message_to_website(message)
+        helper.send_message_to_website(message)
         return helper.add_person_embed(person_name, relation, guild)
     except Exception as e:
         if "UNIQUE constraint failed" in str(e):
             message = f'```Person "{person_name}" already exists in table "person" table. Aborting insert.```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
         else:
-            print("SQLite error, database.add_person():")
-            print(e)
+            print("SQLite error, database.add_person():", str(e))
             return str(e)
       
 async def add_character(character_name: str, character_class: str, level: int, person_name: str) -> str:
@@ -92,7 +62,7 @@ async def add_character(character_name: str, character_class: str, level: int, p
         c.execute("SELECT * FROM person WHERE person_name = ?", (person_name,))
         if not c.fetchall():
             message = f'```Person "{person_name}" does not exist in "person" table. Please create a "person" entry first. Aborting insert.```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
 
         c.execute("SELECT * FROM character WHERE char_name = ?", (character_name,))
@@ -100,7 +70,7 @@ async def add_character(character_name: str, character_class: str, level: int, p
             message = (
                 f'```Character "{character_name}" already exists in table "character". Aborting insert.```'
             )
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
 
         c.execute(
@@ -114,12 +84,11 @@ async def add_character(character_name: str, character_class: str, level: int, p
 
         if result:
             message = f'```Character "{character_name}" inserted successfully: {result}```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return helper.add_character_embed(character_name, character_class, level, person_name)
 
     except Exception as e:
-        print("SQLite error, database.add_char():")
-        print(e)
+        print("SQLite error, database.add_char():", str(e))
         return str(e)
         
 async def delete_person(person_name: str) -> str:
@@ -130,14 +99,14 @@ async def delete_person(person_name: str) -> str:
         bot.db_connection.commit()
         if c.rowcount > 0:
             message = f'```Person "{person_name}" successfully deleted!```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
         else:
             message = f'```Person "{person_name}" does not exist```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
     except Exception as e:
-        print(e)
+        print('delete_person() error:', str(e))
         return str(e)
 
 async def delete_character(character_name: str) -> str:
@@ -149,15 +118,15 @@ async def delete_character(character_name: str) -> str:
 
         if c.rowcount > 0:
             message = f'```Character "{character_name}" successfully deleted!```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
         else:
             message = f'```Character "{character_name}" does not exist.```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
 
     except Exception as e:
-        print(e)
+        print('delete_character() error:', str(e))
         return str(e)
         
 async def edit_person(person_name: str, person_name_new: str, relation: str, guild: str) -> str:
@@ -184,14 +153,12 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
 
         if not results:
             message = f'```Person "{person_name}" does not exist in "person" table. Aborting EDIT.```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
 
     except Exception as e:
-        print("SQLite error, bot_commands.edit_char():")
-        print(e)
-        return e
-
+        print("SQLite error, bot_commands.edit_char():", str(e))
+        return str(e)
     try:
         c.execute(
             """UPDATE person SET person_name = ?, relation = ?, guild = ? WHERE person_name = ?""",
@@ -207,10 +174,10 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
         if relation == 2:
             relation = "Neutral"
         message = f"```Person CHANGED: person_name = {person_name_new}, relation = {relation}, guild = {guild}```"
-        send_message_to_website(message)
+        helper.send_message_to_website(message)
         return message
     except Exception as e:
-        print(e)
+        print('edit_person() error:', str(e))
         return str(e)
 
 async def edit_character(character_name: str, character_name_new: str, character_class: str, level: int, person_name: str) -> str:
@@ -235,7 +202,7 @@ async def edit_character(character_name: str, character_name_new: str, character
 
         if not results:
             message = f'```Character "{character_name}" does not exist in "character" table. Aborting EDIT.```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
 
     except Exception as e:
@@ -251,10 +218,10 @@ async def edit_character(character_name: str, character_name_new: str, character
         results = c.fetchall()
         bot.db_connection.commit()
         message = f"```Character CHANGED: char_name = {character_name_new}, char_class = {character_class}, person_name = {person_name}, level = {level}```"
-        send_message_to_website(message)
+        helper.send_message_to_website(message)
         return message
     except Exception as e:
-        print(e)
+        print('edit_character() error:', str(e))
         return str(e)
     
 async def who(character_name: str) -> str:
@@ -267,7 +234,7 @@ async def who(character_name: str) -> str:
 
         if results is None:
             message = f'```Character "{character_name}" doesnt exist in "character" table```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
         char_class = results[1]
         person_name = results[2]
@@ -278,7 +245,7 @@ async def who(character_name: str) -> str:
 
         if results is None:
             message = f'```Person "{person_name} doesnt exist in "person" table```'
-            send_message_to_website(message)
+            helper.send_message_to_website(message)
             return message
 
         if results[1] == 0:
@@ -289,11 +256,11 @@ async def who(character_name: str) -> str:
             relation = "Neutral"
         results_string = f"```Character: {character_name}, Class: {char_class}```"
         results_string += f'```Person info for "{character_name}": Person: {results[0]}, Relation: {relation}, Guild: {results[2]}```'
-        send_message_to_website(results_string)
+        helper.send_message_to_website(results_string)
         return results_string
 
     except Exception as e:
-        print(e)
+        print('who() error:', str(e))
         return str(e)
 
 async def get_characters(person_name: str) -> str:
@@ -312,10 +279,10 @@ async def get_characters(person_name: str) -> str:
             row = f"Character: {char_name}, Class: {char_class}, Person: {person_name}, Level: {level}"
             formatted_characters += row
             formatted_characters += "\n"
-        send_message_to_website(formatted_characters)
+        helper.send_message_to_website(formatted_characters)
         return "```" + formatted_characters + "```"
     except Exception as e:
-        print(e)
+        print('get_characters() error:', str(e))
         return str(e)
     
 async def get_person_table(guild: str) -> str:
@@ -338,11 +305,11 @@ async def get_person_table(guild: str) -> str:
                     .replace("2", "Neutral")
                 )
                 results_string += "\n"
-            send_message_to_website(results_string)
+            helper.send_message_to_website(results_string)
             results_string = "```" + results_string + "```"
             return results_string
         except Exception as e:
-            print(e)
+            print('get_person_table() error (first conditional):', str(e))
             return str(e)
     else:
         try:
@@ -363,10 +330,10 @@ async def get_person_table(guild: str) -> str:
                 )
                 results_string += "\n"
             results_string = "```" + results_string + "```"
-            send_message_to_website(results_string)
+            helper.send_message_to_website(results_string)
             return results_string
         except Exception as e:
-            print(e)
+            print('get_person_table() error (else statement):', str(e))
             return str(e)
         
 async def get_characters_table(guild: str, character_class: str) -> str:
@@ -405,7 +372,7 @@ async def get_characters_table(guild: str, character_class: str) -> str:
             c.execute("SELECT * FROM character")
         results = c.fetchall()
     except Exception as e:
-        print(e)
+        print('get_characters_table() error: ', str(e))
         return str(e)
 
     sorted_results = sorted(results, key=lambda result: result[0])
@@ -415,7 +382,7 @@ async def get_characters_table(guild: str, character_class: str) -> str:
         row = f"{char_name}, {char_class}, {person_name}, {level}"
         results_string += row + "\n"
     results_string = "```" + results_string + "```"
-    send_message_to_website(results_string)
+    helper.send_message_to_website(results_string)
     print(results_string)
     return results_string
 
@@ -563,10 +530,10 @@ async def parse_image(message: dict):
                     f"""```{char_class} {emojis[char_class]}: {count}```\n"""
                 )
         # Send class comp count
-        send_message_to_website(website_string, image_url)
+        helper.send_message_to_website(website_string, image_url)
         await message.channel.send(formatted_string)
     except Exception as e:
-        print(e)
+        print('parse_image() error:', str(e))
         return str(e)
     
 async def item_search(item_name: str) -> str:
@@ -580,7 +547,7 @@ async def item_search(item_name: str) -> str:
             if results and results[0][1]:
                 print('Exact string found:')
                 print(results[0][1])
-                send_message_to_website(f'Item found: {results[0][1]}')
+                helper.send_message_to_website(f'Item found: {results[0][1]}')
                 return results
             else:
                 c.execute('''SELECT subquery.*
@@ -593,13 +560,13 @@ async def item_search(item_name: str) -> str:
                 if results and results[0][1]:
                     print('Levenshtein search:')
                     print(results[0][1])
-                    send_message_to_website(f'Item found: {results[0][1]}' )
+                    helper.send_message_to_website(f'Item found: {results[0][1]}' )
                 if results:
                     return results
                 else:
                     return f'Couldnt find item: "{item_name}"'
         except Exception as e:
-            print(e)
+            print('item_search() error:', str(e))
 
 async def register_person(person_name: str, discord_username: str):
     # Create a 'discord_username' table
@@ -612,34 +579,89 @@ async def add_raid_event(guild: object, raid_name: str):
         if raiders is None:
             return 'There are no members in any voice channels.'
         
-        c = bot.db_connection.cursor()
-        c.execute('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
-        raid_id = c.lastrowid
-        
-        raider_inserts = [(raider, raid_id, 1) for raider in raiders]
-        c.executemany('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', raider_inserts)
-        bot.db_connection.commit()
+        with bot.db_connection:
+            c = bot.db_connection.cursor()
+            c.execute('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
+            c.execute('''INSERT INTO raid_master_test_backup (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
+            raid_id = c.lastrowid
+            
+            raider_inserts = [(raider, raid_id, 1) for raider in raiders]
+            c.executemany('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', raider_inserts)
+            c.executemany('''INSERT INTO dkp_test_backup (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', raider_inserts)
+            bot.db_connection.commit()
         return 'Raid successfully added'
     except Exception as e:
-        print(e)
+        print('add_raid_event():', str(e))
+        return str(e)
+
+async def delete_raid_event(raid_id: int):
+    try:
+        conn = bot.db_connection
+        with conn:
+            c = bot.db_connection.cursor()
+            c.execute('''SELECT raid_name, raid_date FROM raid_master_test WHERE raid_id = ?''', (raid_id,))
+            result = c.fetchall()
+            if result and result[0]:
+                raid_name, raid_date = result[0]
+            else:
+                print('Raid not found.')
+                return 'Raid not found'
+            c.execute('''DELETE FROM raid_master_test WHERE raid_id = ?''', (raid_id,))
+            c.execute('''DELETE FROM raid_master_test_backup WHERE raid_id = ?''', (raid_id,))
+            c.execute('''DELETE FROM dkp_test WHERE raid_id = ?''', (raid_id,))
+            c.execute('''DELETE FROM dkp_test_backup WHERE raid_id = ?''', (raid_id,))
+            bot.db_connection.commit()
+            message = f'Raid deleted: {raid_name}, {raid_date}.'
+            helper.send_message_to_website(message)
+            return message
+    except Exception as e:
+        print('delete_raid_event() error:', str(e))
         return str(e)
 
 async def add_person_to_raid(person_name: str, raid_id: int):
     try:
         c = bot.db_connection.cursor()
+        # SELECT first to make sure char exists
+        c.execute('''SELECT person_name FROM person_test WHERE person_name = ?''', (person_name,))
+        result = c.fetchone()
+        if not result:
+            return f'Person {person_name} not found.'
         c.execute('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', (person_name, raid_id, 1))
         bot.db_connection.commit()
         message = f'Person {person_name} added to raid: {raid_id}.'
-        send_message_to_website(message)
+        helper.send_message_to_website(message)
         return message
     except Exception as e:
-        print(e)
+        if 'UNIQUE constraint failed' in str(e):
+            print(e)
+            return f'Person {person_name} is already in raid {raid_id}.'
+        print('add_person_to_raid() error:,', str(e))
         return str(e)
-    
 
-
-    
-    
+async def delete_person_from_raid(person_name: str, raid_id: int):
+    try:
+        conn = bot.db_connection
+        with conn:
+            c = bot.db_connection.cursor()
+            print('delete_person_from_raid() raid_id:', raid_id)
+            c.execute('''SELECT raid_name, raid_date FROM raid_master_test WHERE raid_id = ?''', (raid_id,))
+            result = c.fetchone()
+            print('result:', result)
+            if result:
+                raid_name, raid_date = result
+            else:
+                print('logic.delete_person_from_raid(): Raid not found.')
+                return 'logic.delete_person_from_raid(): Raid not found.'
+            
+            c.execute('''DELETE FROM dkp_test WHERE person_name = ?''', (person_name,))
+            c.execute('''DELETE FROM dkp_test_backup WHERE person_name = ?''', (person_name,))
+            bot.db_connection.commit()
+            message = f'{person_name} removed from: {raid_name}, {raid_date}.'
+            helper.send_message_to_website(message)
+            return message
+    except Exception as e:
+        print('delete_person_from_raid() error:', str(e))
+        return str(e)
 
 
 

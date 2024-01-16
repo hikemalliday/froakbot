@@ -134,7 +134,8 @@ def create_tables(bot: object):
     sql_person_table = """CREATE Table IF NOT EXISTS person (
                         person_name TEXT PRIMARY KEY,
                         relation INTEGER,
-                        guild TEXT
+                        guild TEXT,
+                        username TEXT UNIQUE
     )"""
 
     sql_character_table = """CREATE Table IF NOT EXISTS character (
@@ -169,12 +170,18 @@ def create_tables(bot: object):
                     UNIQUE(person_name, raid_id)
     )"""
 
-    sql_raid_ra_table = """CREATE Table IF NOT EXISTS raid_ra (
-                        entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        person_name TEXT,
-                        raid_id INTEGER,
-                        FOREIGN KEY (person_name) REFERENCES person(person_name),
-                        FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id)
+    sql_raid_master_table_backup = """CREATE Table IF NOT EXISTS raid_master_backup (
+                            raid_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            raid_name TEXT NOT NULL,
+                            raid_date TEXT
+    )"""
+
+    sql_dkp_table_backup = """CREATE Table IF NOT EXISTS dkp_backup (
+                    entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    person_name TEXT,
+                    raid_id INTEGER,
+                    dkp_points INTEGER,
+                    UNIQUE(person_name, raid_id)
     )"""
 
     try:
@@ -184,7 +191,8 @@ def create_tables(bot: object):
         c.execute(sql_raid_master_table)
         c.execute(sql_person_loot_table)
         c.execute(sql_dkp_table)
-        c.execute(sql_raid_ra_table)
+        c.execute(sql_raid_master_table_backup)
+        c.execute(sql_dkp_table_backup)
         bot.db_connection.commit()
         print('re-vamped tables created!')
     except Exception as e:
@@ -196,7 +204,8 @@ def create_test_tables(bot: object):
     sql_person_table_test = """CREATE Table IF NOT EXISTS person_test (
                         person_name TEXT PRIMARY KEY,
                         relation INTEGER,
-                        guild TEXT
+                        guild TEXT,
+                        username TEXT UNIQUE
     )"""
 
     sql_character_table_test = """CREATE Table IF NOT EXISTS character_test (
@@ -232,13 +241,18 @@ def create_test_tables(bot: object):
                     UNIQUE(person_name, raid_id)
     )"""
 
-    sql_raid_ra_table_test = """CREATE Table IF NOT EXISTS raid_ra_test (
-                        entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        person_name TEXT,
-                        raid_id INTEGER,
-                        FOREIGN KEY (person_name) REFERENCES person_test(person_name),
-                        FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id),
-                        
+    sql_raid_master_table_test_backup = """CREATE Table IF NOT EXISTS raid_master_test_backup (
+                            raid_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            raid_name TEXT NOT NULL,
+                            raid_date TEXT
+    )"""
+
+    sql_dkp_table_test_backup = """CREATE Table IF NOT EXISTS dkp_test_backup (
+                    entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    person_name TEXT,
+                    raid_id INTEGER,
+                    dkp_points INTEGER,
+                    UNIQUE(person_name, raid_id)
     )"""
 
     try:
@@ -248,7 +262,9 @@ def create_test_tables(bot: object):
         c.execute(sql_raid_master_table_test)
         c.execute(sql_person_loot_table_test)
         c.execute(sql_dkp_table_test)
-        c.execute(sql_raid_ra_table_test)
+        c.execute(sql_raid_master_table_test_backup)
+        c.execute(sql_dkp_table_test_backup)
+        
         bot.db_connection.commit()
         print('Test tables created!')
     except Exception as e:
@@ -264,7 +280,8 @@ def drop_tables(bot: object):
         c.execute('''DROP TABLE raid_master;''')
         c.execute('''DROP TABLE character;''')
         c.execute('''DROP TABLE dkp;''')
-        c.execute('''DROP TABLE raid_ra;''')
+        c.execute('''DROP TABLE dkp_backup;''')
+        c.execute('''DROP TABLE raid_master_backup;''')
         bot.db_connection.commit()
         print('TABLES DROPPED')
         
@@ -280,7 +297,8 @@ def drop_test_tables(bot: object):
         c.execute('''DROP TABLE raid_master_test;''')
         c.execute('''DROP TABLE character_test;''')
         c.execute('''DROP TABLE dkp_test;''')
-        c.execute('''DROP TABLE raid_ra_test;''')
+        c.execute('''DROP TABLE dkp_test_backup;''')
+        c.execute('''DROP TABLE raid_master_test_backup;''')
         bot.db_connection.commit()
         print('Test tables dropped.')   
     except Exception as e:
@@ -308,7 +326,10 @@ def reset_test_tables(bot: object):
     except Exception as e:
         print('Couldnt reset test tables: ', str(e))
         return
-    
+
+def reset_backup_tables(bot: object):
+    pass
+
 def add_mock_rows_raid_master_test(bot: object):
     try:
         date_time = datetime.now().strftime("%m-%d-%Y")
@@ -328,6 +349,7 @@ def add_mock_rows_raid_master_test(bot: object):
         conn = bot.db_connection
         c = conn.cursor()
         c.executemany('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (mock_rows))
+        c.executemany('''INSERT INTO raid_master_test_backup (raid_name, raid_date) VALUES (?, ?)''', (mock_rows))
         conn.commit()
         print('add_mock_rows_raid_master_test() success.')
     except Exception as e:
@@ -446,11 +468,23 @@ def add_mock_rows_dkp_test(bot: object):
           ('Bodied', 10, 1),
           ('Kilbur', 10, 1),
           ('Ivah', 10, 1),
-          ('Grixus', 10, 1)
+          ('Grixus', 10, 1),
+          ('Sharknado', 11, 1),
+          ('Threepeat', 11, 1),
+          ('Choopa', 11, 1),
+          ('Slarti', 11, 1),
+          ('Filpox', 11, 1),
+          ('Norrix', 11, 1),
+          ('Tune', 11, 1),
+          ('Bodied', 11, 1),
+          ('Kilbur', 11, 1),
+          ('Ivah', 11, 1),
+          ('Grixus', 11, 1)
       ]
       conn = bot.db_connection
       c = conn.cursor()
       c.executemany('''INSERT INTO dkp_test (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', (mock_rows))
+      c.executemany('''INSERT INTO dkp_test_backup (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', (mock_rows))
       conn.commit()
       print('add_mock_rows_dkp_test() success.')
     except Exception as e:

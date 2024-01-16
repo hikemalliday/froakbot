@@ -184,6 +184,14 @@ def create_tables(bot: object):
                     UNIQUE(person_name, raid_id)
     )"""
 
+    sql_person_loot_table_backup = """CREATE Table IF NOT EXISTS person_loot_backup (
+                            entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            person_name TEXT,
+                            item_name TEXT,
+                            raid_id INTEGER
+                            
+    )"""
+
     try:
         c = bot.db_connection.cursor()
         c.execute(sql_person_table)
@@ -193,6 +201,7 @@ def create_tables(bot: object):
         c.execute(sql_dkp_table)
         c.execute(sql_raid_master_table_backup)
         c.execute(sql_dkp_table_backup)
+        c.execute(sql_person_loot_table_backup)
         bot.db_connection.commit()
         print('re-vamped tables created!')
     except Exception as e:
@@ -255,6 +264,14 @@ def create_test_tables(bot: object):
                     UNIQUE(person_name, raid_id)
     )"""
 
+    sql_person_loot_table_test_backup = """CREATE Table IF NOT EXISTS person_loot_test_backup (
+                            entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            person_name TEXT,
+                            item_name TEXT,
+                            raid_id INTEGER
+                            
+    )"""
+
     try:
         c = bot.db_connection.cursor()
         c.execute(sql_person_table_test)
@@ -264,11 +281,12 @@ def create_test_tables(bot: object):
         c.execute(sql_dkp_table_test)
         c.execute(sql_raid_master_table_test_backup)
         c.execute(sql_dkp_table_test_backup)
+        c.execute(sql_person_loot_table_test_backup)
         
         bot.db_connection.commit()
         print('Test tables created!')
     except Exception as e:
-        print('db_migration.create_tables() error:')
+        print('db_migration.create_test_tables() error:')
         print(e)
         return str(e)
 
@@ -282,11 +300,12 @@ def drop_tables(bot: object):
         c.execute('''DROP TABLE dkp;''')
         c.execute('''DROP TABLE dkp_backup;''')
         c.execute('''DROP TABLE raid_master_backup;''')
+        c.execute('''DROP TABLE person_loot_backup;''')
         bot.db_connection.commit()
         print('TABLES DROPPED')
         
     except Exception as e:
-        print('reset_tables() error: ', str(e))
+        print('drop_tables() error: ', str(e))
         return str(e)
     
 def drop_test_tables(bot: object):
@@ -299,10 +318,11 @@ def drop_test_tables(bot: object):
         c.execute('''DROP TABLE dkp_test;''')
         c.execute('''DROP TABLE dkp_test_backup;''')
         c.execute('''DROP TABLE raid_master_test_backup;''')
+        c.execute('''DROP TABLE person_loot_test_backup;''')
         bot.db_connection.commit()
         print('Test tables dropped.')   
     except Exception as e:
-        print('reset_tables() error, couldnt drop tables: ', str(e))
+        print('drop_test_tables() error, couldnt drop tables: ', str(e))
         return str(e)
 
 def reset_tables(bot: object):

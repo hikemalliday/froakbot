@@ -5,8 +5,26 @@ from datetime import datetime
 import requests
 import json
 from decouple import config as env
+import db_functions
 db_path = env('DB_PATH')
 url = env('URL')
+
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
+    print('helper.raid_name_autocompletion() 1')
+    raid_names = await fetch_raid_names(current)
+    if raid_names is None:
+        return ['No raids of that name found.']
+    print('helper.raid_name_autocompletion() 2')
+    choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
+    return choices
+
+async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    print('helper.person_name_autocompletion() 1')
+    person_names = await fetch_raider_names(current)
+    if person_names is None:
+        return ['helper.add_person_to_raid.person_name_autocompletion() error.']
+    choices = [discord.app_commands.Choice(name=name, value=name) for name in person_names]
+    return choices
 
 def send_message_to_website(message: dict=None, image_url=None):
     return
@@ -122,3 +140,36 @@ async def fetch_raider_names(person_name: str):
     except Exception as e:
         print('fetch_raider_names() error:', str(e))
         return str(e)
+    
+async def item_search(item_name: str) -> str:
+    if item_name:
+        try:
+            db_functions.create_levenshtein_function(bot)
+            c = bot.db_connection.cursor()
+            # Attempt to find exact string match first:
+            c.execute('''SELECT * FROM items_master WHERE name LIKE ?''', (item_name,))
+            results = c.fetchall()
+            if results and results[0][1]:
+                print('Exact string found:')
+                print(results[0][1])
+                send_message_to_website(f'Item found: {results[0][1]}')
+                return results[0][1]
+            else:
+                c.execute('''SELECT subquery.*
+                    FROM (
+                    SELECT * FROM items_master WHERE name LIKE ? || '%'
+                    ) AS subquery
+                    WHERE levenshtein(subquery.name, ?) <= 20;''', (item_name, item_name))
+                results = c.fetchall()
+                print('Query results: ' + str(results))
+                if results and results[0][1]:
+                    print('Levenshtein search:')
+                    print(results[0][1])
+                    send_message_to_website(f'Item found: {results[0][1]}' )
+                if results:
+                    return results[0][1]
+                else:
+                    return f'Couldnt find item: "{item_name}"'
+        except Exception as e:
+            print('item_search() error:', str(e))
+

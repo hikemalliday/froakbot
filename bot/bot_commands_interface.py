@@ -95,21 +95,14 @@ async def get_characters_table(interaction: discord.Interaction, guild: str = No
 async def parse_image(message: dict):
     await logic.parse_image(message)
 
-@app_commands.command(name='item_search')
-@app_commands.describe(item_name='Enter an item name')
-async def item_search(interaction: discord.Interaction, item_name: str):
-    results = await logic.item_search(item_name)
-    await interaction.response.send_message(results)
-
-
-
-@app_commands.command(name='biggest_channel')
-async def get_most_populated_channel(interaction: discord.Interaction):
-    if interaction.guild:
-        results = await helper.get_most_populated_channel(interaction.guild)
-        await interaction.response.send_message(results)
-    else:
-        await interaction.response.send_message("Error (biggest_channel): no guild passed.")
+# DESECRATED
+# @app_commands.command(name='biggest_channel')
+# async def get_most_populated_channel(interaction: discord.Interaction):
+#     if interaction.guild:
+#         results = await helper.get_most_populated_channel(interaction.guild)
+#         await interaction.response.send_message(results)
+#     else:
+#         await interaction.response.send_message("Error (biggest_channel): no guild passed.")
 
 @app_commands.command(name='add_raid_event')
 @app_commands.describe(raid_name='Enter a raid name')
@@ -123,29 +116,17 @@ async def add_raid_event(interaction: discord.Interaction, raid_name: str):
 @app_commands.command(name='add_person_to_raid')
 @app_commands.describe(person_name='Enter person', raid_id='Enter raid id')
 async def add_person_to_raid(interaction: discord.Interaction, person_name: str, raid_id: int):
-    print('interface.add_person_to_raid() start')
     results = await logic.add_person_to_raid(person_name, raid_id)
     await interaction.response.send_message(results)
    
 @add_person_to_raid.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
-    print('interface.raid_name_autocompletion() start')
-    raid_names = await helper.fetch_raid_names(current)
-    print('interface.raid_name_autocompletion() 1')
-    if raid_names is None:
-        return ['No raids of that name found.']
-    choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
-    return choices
+    return await helper.raid_name_autocompletion(interaction, current)
 
 @add_person_to_raid.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
-    person_names = await helper.fetch_raider_names(current)
-    if person_names is None:
-        return ['/add_person_to_raid.person_name_autocompletion() error.']
-    choices = [discord.app_commands.Choice(name=name, value=name) for name in person_names]
-    return choices
+    return await helper.person_name_autocompletion(interaction, current)
 
-# Need to fetch pulldown for this, and delete raid_master, raid_master_backup, dkp, dkp_backup 
 @app_commands.command(name='delete_raid_event')
 @app_commands.describe(raid_id='Enter raid id')
 async def delete_raid_event(interaction: discord.Interaction, raid_id: int):
@@ -154,35 +135,57 @@ async def delete_raid_event(interaction: discord.Interaction, raid_id: int):
    
 @delete_raid_event.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
-    raid_names = await helper.fetch_raid_names(current)
-    if raid_names is None:
-        return ['No raids of that name found.']
-    choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
-    return choices
+    return await helper.raid_name_autocompletion(interaction, current)
 
 @app_commands.command(name='delete_person_from_raid')
 @app_commands.describe(raid_id='Enter raid id', person_name='Enter person')
 async def delete_person_from_raid(interaction: discord.Interaction, person_name: str, raid_id: int):  
     results = await logic.delete_person_from_raid(person_name, raid_id)
-    print('delete_person_from_raid() results: ', )
     await interaction.response.send_message(results)
    
 @delete_person_from_raid.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
-    person_names = await helper.fetch_raider_names(current)
-    if person_names is None:
-        return ['Raid has no raiders.']
-    choices = [discord.app_commands.Choice(name=name, value=name) for name in person_names]
-    return choices
+    return await helper.person_name_autocompletion(interaction, current)
 
 @delete_person_from_raid.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
-    raid_names = await helper.fetch_raid_names(current)
-    if raid_names is None:
-        return ['No raids of that name found.']
-    choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
-    return choices
+    return await helper.raid_name_autocompletion(interaction, current)
 
+@app_commands.command(name='award_loot')
+@app_commands.describe(item_name='Enter item_name', person_name='Enter person', raid_id='Enter raid ID')
+async def award_loot(interaction: discord.Interaction, item_name: str, person_name: str, raid_id: int):  
+    item_name_result = await helper.item_search(item_name)
+    if not item_name_result:
+        print(f'Item {item_name} not found.')
+        return await interaction.response.send_message(f'Item {item_name} not found.')
+    results = await logic.award_loot(item_name_result, person_name, raid_id)
+    await interaction.response.send_message(results)
+
+@award_loot.autocomplete('person_name')
+async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    return await helper.person_name_autocompletion(interaction, current)
+
+@award_loot.autocomplete('raid_id')
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
+    return await helper.raid_name_autocompletion(interaction, current)
+
+@app_commands.command(name='remove_loot')
+@app_commands.describe(item_name='Enter item_name', person_name='Enter person', raid_id='Enter raid ID')
+async def remove_loot(interaction: discord.Interaction, item_name: str, person_name: str, raid_id: int):  
+    item_name_result = await helper.item_search(item_name)
+    if not item_name_result:
+        print(f'Item {item_name} not found.')
+        return await interaction.response.send_message(f'Item {item_name} not found.')
+    results = await logic.remove_loot(item_name_result, person_name, raid_id)
+    await interaction.response.send_message(results)
+
+@remove_loot.autocomplete('person_name')
+async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    return await helper.person_name_autocompletion(interaction, current)
+
+@remove_loot.autocomplete('raid_id')
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
+    return await helper.raid_name_autocompletion(interaction, current)
 
 slash_commands = [
     add_person, 
@@ -195,10 +198,11 @@ slash_commands = [
     get_characters, 
     get_person_table, 
     get_characters_table, 
-    item_search,
     get_most_populated_channel,
     add_raid_event,
     add_person_to_raid,
     delete_raid_event,
-    delete_person_from_raid
+    delete_person_from_raid,
+    award_loot,
+    remove_loot,
     ]

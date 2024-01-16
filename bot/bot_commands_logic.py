@@ -536,38 +536,6 @@ async def parse_image(message: dict):
         print('parse_image() error:', str(e))
         return str(e)
     
-async def item_search(item_name: str) -> str:
-    if item_name:
-        try:
-            db_functions.create_levenshtein_function(bot)
-            c = bot.db_connection.cursor()
-            # Attempt to find exact string match first:
-            c.execute('''SELECT * FROM items_master WHERE name = ?''', (item_name,))
-            results = c.fetchall()
-            if results and results[0][1]:
-                print('Exact string found:')
-                print(results[0][1])
-                helper.send_message_to_website(f'Item found: {results[0][1]}')
-                return results
-            else:
-                c.execute('''SELECT subquery.*
-                    FROM (
-                    SELECT * FROM items_master WHERE name LIKE ? || '%'
-                    ) AS subquery
-                    WHERE levenshtein(subquery.name, ?) <= 20;''', (item_name, item_name))
-                results = c.fetchall()
-                print('Query results: ' + str(results))
-                if results and results[0][1]:
-                    print('Levenshtein search:')
-                    print(results[0][1])
-                    helper.send_message_to_website(f'Item found: {results[0][1]}' )
-                if results:
-                    return results
-                else:
-                    return f'Couldnt find item: "{item_name}"'
-        except Exception as e:
-            print('item_search() error:', str(e))
-
 async def register_person(person_name: str, discord_username: str):
     # Create a 'discord_username' table
     pass
@@ -663,6 +631,68 @@ async def delete_person_from_raid(person_name: str, raid_id: int):
         print('delete_person_from_raid() error:', str(e))
         return str(e)
 
+async def award_loot(item_name: str, person_name: str, raid_id: int):
+    try:
+        conn = bot.db_connection
+        with conn:
+            print('logic.awardItem():')
+            print(f'item_name: {item_name}, person_name: {person_name}, raid_id: {raid_id}')
+
+            c = conn.cursor()
+            c.execute('''SELECT person_name FROM person_test WHERE person_name = ?''', (person_name,))
+            result = c.fetchone()
+            if not result:
+                return f'Person {person_name} does not exist.'
+            
+            c.execute('''SELECT raid_name FROM raid_master_test WHERE raid_id = ?''', (raid_id,))
+            result = c.fetchone()
+            if not result:
+                return f'Raid_id {raid_id} does not exist.'
+            
+            raid_name = result[0]
+            c.execute('''INSERT INTO person_loot_test (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (item_name, person_name, raid_id))
+            c.execute('''INSERT INTO person_loot_test_backup (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (item_name, person_name, raid_id))
+            conn.commit()
+            return f'Item {item_name} awarded to {person_name} at {raid_name}'
+    except Exception as e:
+        error_message = f'logic.award_item() error: {e}'
+        print(error_message)
+        return error_message
+async def remove_loot(item_name: str, person_name: str, raid_id: int):
+    try:
+        conn = bot.db_connection
+        with conn:
+            print('logic.remove_loot():')
+            print(f'item_name: {item_name}, person_name: {person_name}, raid_id: {raid_id}')
+
+            c = conn.cursor()
+            c.execute('''SELECT person_name FROM person_test WHERE person_name = ?''', (person_name,))
+            result = c.fetchone()
+            if not result:
+                return f'Person {person_name} does not exist.'
+                
+            c.execute('''SELECT raid_name FROM raid_master_test WHERE raid_id = ?''', (raid_id,))
+            result = c.fetchone()
+            if not result:
+                return f'Raid ID: {raid_id} does not exist.'
+                
+            raid_name = result[0]
+            c.execute('''SELECT * FROM person_loot_test WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
+            results = c.fetchall()
+            print('result after SELECT: ', str(result))
+            if not results:
+                return f'ERROR: Item: {item_name} for person: {person_name} NOT FOUND at raid: {raid_name}'
+            
+            c.execute('''DELETE FROM person_loot_test WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
+            c.execute('''DELETE FROM person_loot_test_backup WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
+            conn.commit()
+            return f'Item {item_name} removed from {person_name} at {raid_name}'
+    except Exception as e:
+        error_message = f'logic.remove_loot() error: {e}'
+        print(error_message)
+        return error_message
+
+    
 
 
         

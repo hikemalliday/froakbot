@@ -4,7 +4,7 @@
 ##### Docker Hub:
 [https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/r/hikemalliday/froakbot)
 
-Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
+###### Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
 
 Froakbot is not only a DKP / Loot tracking bot, but has an image parsing feature than returns data about the game state.
 

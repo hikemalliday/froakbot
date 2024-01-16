@@ -20,6 +20,10 @@ The bot parses the image and compares the character names to a SQLite database (
 
 Also contains basic CRUD commands for search of character data.
 
+### Database architecture:
+
+![alt_text](https://cdn.discordapp.com/attachments/617825237752479751/1196965683154653284/image.png?ex=65b98c29&is=65a71729&hm=c6cce415b2783b07f244a483501f47ec784310542173f35bbf053cbb0cf5d187&)
+
 # Dev Notes:
 
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.

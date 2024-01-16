@@ -4,7 +4,7 @@
 ##### Docker Hub:
 [https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/r/hikemalliday/froakbot)
 
-Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Some .py files are descrated, as commented at the tops of said files, I just dont want to outright delete them yet.
+Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
 
 The discord bot parses an image of the character names in a zone:
 
@@ -20,7 +20,7 @@ Also contains basic CRUD commands for search of character data.
 
 # Dev Notes:
 
-Currently refactoring the text commands into superior 'Slash Commands', using the Slash Commands API. Some of the .py files are descrated, as commented at the top of the files.
+Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
 
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
 

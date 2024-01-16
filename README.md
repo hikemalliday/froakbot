@@ -4,7 +4,7 @@
 ##### Docker Hub:
 [https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/r/hikemalliday/froakbot)
 
-Froakbot is not only a DKP / Loot tracking bot, but also has an image parsing feature than returns data about the game state.
+Froakbot is not only a DKP / Loot tracking bot, but also has an image parsing feature that returns data about the game state.
 
 ### Image Parser:
 

@@ -4,7 +4,9 @@
 ##### Docker Hub:
 [https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/r/hikemalliday/froakbot)
 
-Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
+Froakbot is not only a DKP / Loot tracking bot, but also has an image parsing feature that returns data about the game state.
+
+### Image Parser:
 
 The discord bot parses an image of the character names in a zone:
 
@@ -18,11 +20,16 @@ The bot parses the image and compares the character names to a SQLite database (
 
 Also contains basic CRUD commands for search of character data.
 
+### Database architecture:
+
+![alt_text](https://cdn.discordapp.com/attachments/617825237752479751/1196965683154653284/image.png?ex=65b98c29&is=65a71729&hm=c6cce415b2783b07f244a483501f47ec784310542173f35bbf053cbb0cf5d187&)
+
 # Dev Notes:
 
-Currently undergoing a refactor from text commands to the superior 'Slash Commands API'. Also in the process of scaling the bot to a loot tracking / dkp tracking bot.
-
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
+
+I copied the Project Quarm item database, so that when awarding raid loot, when you input the item_name string, if spelled close enough, it will enter the correct spelling of the item into the database. This allows for standardized data that is more queryable.
+All of the CRUD commands are reading and writing from duplicate 'test' tables I created, because I am currently undergoing heavy work on this project.
 
 Created in Python. The bot reads / writes to a local SQLite database. The image parsing library used is Pytesseract.
 I built it so that my guildmates can assess the class composition of an enemy force, before charging into battle (we play on a PvP server).

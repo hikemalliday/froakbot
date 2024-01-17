@@ -173,3 +173,8 @@ async def item_search(item_name: str) -> str:
         except Exception as e:
             print('item_search() error:', str(e))
 
+async def print_large_message(interaction: object, result: str) -> str:
+     for i in range(0, len(result), 1994):
+                chunk = result[i : i + 1994]
+                chunk = "```" + chunk + "```"
+                await interaction.followup.send(chunk)

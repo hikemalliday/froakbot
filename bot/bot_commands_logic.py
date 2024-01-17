@@ -1,7 +1,7 @@
 # V2 (clas commands API)
 from data.char_classes import class_names, emojis
 from decouple import config as env
-from data.config import table_flag 
+from data.config import table_flag, test_mode 
 import pytesseract
 import pytesseract
 import helper
@@ -13,9 +13,6 @@ from bot.bot_instance import bot
 
 db_path = env('DB_PATH')
 url = env('URL')
-
-
-
 
 async def add_person(person_name: str, relation: str, guild: str) -> object:
     if relation.lower() in ['enemy', 'foe', 'opponent']:
@@ -42,6 +39,8 @@ async def add_person(person_name: str, relation: str, guild: str) -> object:
             f'```Player "{person_name}" successfully inserted into "person{table_flag}" table.```'
         )
         helper.send_message_to_website(message)
+        if test_mode == True:
+            return message
         return helper.add_person_embed(person_name, relation, guild)
     except Exception as e:
         if "UNIQUE constraint failed" in str(e):
@@ -90,6 +89,8 @@ async def add_character(character_name: str, character_class: str, level: int, p
         if result:
             message = f'```Character "{character_name}" inserted successfully: {result}```'
             helper.send_message_to_website(message)
+            if test_mode == True:
+                return message
             return helper.add_character_embed(character_name, character_class, level, person_name)
 
     except Exception as e:
@@ -236,7 +237,7 @@ async def who(character_name: str) -> str:
     character_name = character_name.title()
 
     try:
-        conn = bot.db_commands
+        conn = bot.db_connection
         c = conn.cursor()
         c.execute(f"""SELECT * FROM character{table_flag} WHERE char_name = ?""", (character_name,))
         results = c.fetchone()
@@ -275,7 +276,7 @@ async def who(character_name: str) -> str:
 async def get_characters(person_name: str) -> str:
     person_name = person_name.title()
     try:
-        conn = bot.db_commands
+        conn = bot.db_connection
         c = conn.cursor()
         c.execute(
             f"""SELECT * FROM character{table_flag} WHERE person_name = ?""", (person_name,)
@@ -697,8 +698,8 @@ async def award_loot(item_name: str, person_name: str, raid_id: int):
                 return f'Raid_id {raid_id} does not exist.'
             
             raid_name = result[0]
-            c.execute(f'''INSERT INTO person_loot{table_flag} (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (item_name, person_name, raid_id))
-            c.execute(f'''INSERT INTO person_loot{table_flag}_backup (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (item_name, person_name, raid_id))
+            c.execute(f'''INSERT INTO person_loot{table_flag} (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (person_name, item_name, raid_id))
+            c.execute(f'''INSERT INTO person_loot{table_flag}_backup (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (person_name, item_name, raid_id))
             conn.commit()
             return f'Item {item_name} awarded to {person_name} at {raid_name}'
     except Exception as e:
@@ -727,7 +728,8 @@ async def remove_loot(item_name: str, person_name: str, raid_id: int):
             raid_name = result[0]
             c.execute(f'''SELECT * FROM person_loot{table_flag} WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
             results = c.fetchall()
-            print('result after SELECT: ', str(result))
+            print(f"logic.remove_loot() query string: f'''SELECT * FROM person_loot{table_flag} WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id)")
+            print('result after SELECT: ', str(results))
             if not results:
                 return f'ERROR: Item: {item_name} for person: {person_name} NOT FOUND at raid: {raid_name}'
             
@@ -746,6 +748,7 @@ async def run_all_commands():
     relation = 'Friendly'
     guild = 'Tempest'
     character_name = 'Penalty'
+    character_name_new = 'Penalty'
     character_class = 'Monk'
     level = 60
     username = 'grixus.'
@@ -753,31 +756,36 @@ async def run_all_commands():
     raid_id = 1
     item_name = 'Amulet of Necropotence'
 
-    results = ['logic.run_all_commands():']
+    results = ['logic.run_all_commands():',
+               'add_person(): ' + await add_person(person_name, relation, guild),
+               'add_character(): ' + await add_character(character_name, character_class, level, person_name),
+               'edit_person(): ' + await edit_person(person_name, person_name_new, relation, guild),
+               'edit_character(): ' + await edit_character(character_name, character_name_new, character_class, level, person_name),
+               'who():'+ await who(character_name),
+               'delete_person(): ' + await delete_person(person_name),
+               'delete_character(): ' + await delete_character(character_name),
+               'get_characters("Grixus): ' + await get_characters(person_name),
+               'get_person_table("Tempest"): ' + await get_person_table(guild),
+               'get_characters_table("Tempest", "Monk"): ' + await get_characters_table(guild, character_class),
+               'add_raid_event(): ' + await add_raid_event(guild, raid_name),
+               'add_person(): ' + await add_person(person_name, relation, guild),
+               'add_person_to_raid(): ' + await add_person_to_raid(person_name, raid_id),
+               'award_loot(): ' + await award_loot(item_name, person_name, raid_id),
+               'remove_loot(): ' + await remove_loot(item_name, person_name, raid_id),
+               'register_person(): ' + await register_person(person_name, username),
+               'unregister_person(): ' + await unregister_person(person_name),
+               'delete_person_from_raid(): ' + await delete_person_from_raid(person_name, raid_id),
+               'delete_raid_event(): ' + await delete_raid_event(raid_id),
+               ]
 
-    results.append('add_person(): ' + await add_person(person_name, relation, guild))
-    results.append('add_character(): ' + await add_character(character_name, character_class, level, person_name))
-    results.append('edit_person(): ' + await edit_person(person_name, person_name_new, relation, guild))
-    results.append('edit_character(): ' + await add_character(character_name, character_class, level, person_name))
-    results.append('delete_person(): ' + await delete_person(person_name))
-    results.append('delete_character(): ' + await delete_character(character_name))
-    results.append('who():'+ await who(character_name))
-    results.append('get_characters(): ' + await get_characters(person_name))
-    results.append('get_person_table(): ' + await get_person_table())
-    results.append('get_person_table("Tempest"): ' + await get_person_table(guild))
-    results.append('get_characters_table(): ' + await get_characters_table())
-    results.append('get_characters_table("Tempest"): ' + await get_characters_table(guild))
-    results.append('add_raid_event(): ' + await add_raid_event(guild, raid_name))
-    results.append('add_person_to_raid(): ' + await add_person_to_raid(person_name, raid_id))
-    results.append('delete_person_from_raid(): ' + await delete_person_from_raid(person_name, raid_id))
-    results.append('delete_raid_event(): ' + await delete_raid_event(raid_id))
-    results.append('award_loot(): ' + await award_loot(item_name, person_name, raid_id))
-    results.append('remove_loot(): ' + await remove_loot(item_name, person_name, raid_id))
-    results.append('register_person(): ' + await register_person(person_name, username))
-    results.append('unregister_person(): ' + await unregister_person(person_name))
+
+    #results.append('get_person_table(): ' + await get_person_table())
+    
+    #results.append('get_characters_table(): ' + await get_characters_table())
+
     
     print(results)
-    return str(results)
+    return results
 
 
     

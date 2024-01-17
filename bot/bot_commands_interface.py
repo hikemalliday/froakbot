@@ -5,19 +5,20 @@ from discord import app_commands
 import helper
 selected_raid_id = None
 
-# Runs all commands to check for bugs. It is not a true 'test' in the conventional sense. But I find it useful.
+# Runs all commands and prints logs. Much easier than testing things by hand. Not a true 'unit test' or testing library, but I find it very useful
 @app_commands.command(name='run_all_commands')
 async def run_all_commands(interaction: discord.Interaction):
-    results = logic.run_all_commands()
-    await interaction.response.send_message(results)
-    if len(results) > 1994:
-        for i in range(0, len(results), 1994):
-            chunk = results[i : i + 1994]
-            chunk = "```" + chunk + "```"
-            await interaction.followup.send(chunk)
-    else:
-        await interaction.followup.send(results)
-        
+    await interaction.response.defer()
+    try:
+        results = await logic.run_all_commands()
+    except Exception as e:
+        assert False, f'run_all_commands raised an exception: {e}'
+    for result in results:
+        if len(result) > 1994:
+            await helper.print_large_message(interaction, result)
+        else:
+            await interaction.followup.send(result)
+
 #NOTE: added to test command
 @app_commands.command(name='add_person')
 @app_commands.describe(person_name='Enter a person name', relation='Enter relation status', guild='Enter a guild')
@@ -73,10 +74,7 @@ async def get_characters(interaction: discord.Interaction, person_name: str):
     await interaction.response.defer()
     results = await logic.get_characters(person_name)
     if len(results) > 1994:
-        for i in range(0, len(results), 1994):
-            chunk = results[i : i + 1994]
-            chunk = "```" + chunk + "```"
-            await interaction.followup.send(chunk)
+        await helper.print_large_message(interaction, results)
     else:
         await interaction.followup.send(results)
 #NOTE: added to test command
@@ -86,10 +84,7 @@ async def get_person_table(interaction: discord.Interaction, guild: str = None):
    await interaction.response.defer()
    results = await logic.get_person_table(guild)
    if len(results) > 1994:
-        for i in range(0, len(results), 1994):
-            chunk = results[i : i + 1994]
-            chunk = "```" + chunk + "```"
-            await interaction.followup.send(chunk)
+        await helper.print_large_message(interaction, results)
    else:
         await interaction.followup.send(results)
 #NOTE: added to test command
@@ -99,10 +94,7 @@ async def get_characters_table(interaction: discord.Interaction, guild: str = No
     await interaction.response.defer()
     results = await logic.get_characters_table(guild, character_class)
     if len(results) > 1994:
-        for i in range(0, len(results), 1994):
-            chunk = results[i : i + 1994]
-            chunk = "```" + chunk + "```"
-            await interaction.followup.send(chunk)
+        await helper.print_large_message(interaction, results)
     else:
         await interaction.followup.send(results)
 
@@ -230,5 +222,6 @@ slash_commands = [
     award_loot,
     remove_loot,
     register_person,
-    unregister_person
+    unregister_person,
+    run_all_commands
     ]

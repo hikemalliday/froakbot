@@ -22,7 +22,7 @@ Also contains basic CRUD commands for search of character data.
 
 ### Database architecture:
 
-![alt_text](https://cdn.discordapp.com/attachments/617825237752479751/1196965683154653284/image.png?ex=65b98c29&is=65a71729&hm=c6cce415b2783b07f244a483501f47ec784310542173f35bbf053cbb0cf5d187&)
+![alt_text](https://cdn.discordapp.com/attachments/1180635913022353499/1197241520181485708/image.png?ex=65ba8d0e&is=65a8180e&hm=431f1b2bbc59cdc0ff7f39cb92e64e19bc88167d82b6c9e80ee28e5d6b12f8f1&)
 
 # Dev Notes:
 

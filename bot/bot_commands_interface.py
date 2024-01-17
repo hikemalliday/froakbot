@@ -5,6 +5,20 @@ from discord import app_commands
 import helper
 selected_raid_id = None
 
+# Runs all commands to check for bugs. It is not a true 'test' in the conventional sense. But I find it useful.
+@app_commands.command(name='run_all_commands')
+async def run_all_commands(interaction: discord.Interaction):
+    results = logic.run_all_commands()
+    await interaction.response.send_message(results)
+    if len(results) > 1994:
+        for i in range(0, len(results), 1994):
+            chunk = results[i : i + 1994]
+            chunk = "```" + chunk + "```"
+            await interaction.followup.send(chunk)
+    else:
+        await interaction.followup.send(results)
+        
+#NOTE: added to test command
 @app_commands.command(name='add_person')
 @app_commands.describe(person_name='Enter a person name', relation='Enter relation status', guild='Enter a guild')
 async def add_person(interaction: discord.Interaction, person_name: str, relation: str, guild: str):
@@ -13,7 +27,7 @@ async def add_person(interaction: discord.Interaction, person_name: str, relatio
         await interaction.response.send_message(results)
     else:
         await interaction.response.send_message(embed=results)
-
+#NOTE: added to test command
 @app_commands.command(name='add_character')
 @app_commands.describe(character_name='Enter a character name', character_class='Enter a character class', level='Enter level', person_name='Enter a person name')
 async def add_character(interaction: discord.Interaction, character_name: str, character_class: str, level: int,  person_name: str):
@@ -22,37 +36,37 @@ async def add_character(interaction: discord.Interaction, character_name: str, c
         await interaction.response.send_message(results)
     else:
         await interaction.response.send_message(embed=results)
-
+#NOTE: added to test command
 @app_commands.command(name='delete_person')
 @app_commands.describe(person_name='Enter a person name')
 async def delete_person(interaction: discord.Interaction, person_name: str):
     results = await logic.delete_person(person_name)
     await interaction.response.send_message(results)
-
+#NOTE: added to test command
 @app_commands.command(name='delete_character')
 @app_commands.describe(character_name='Enter a character name')
 async def delete_character(interaction: discord.Interaction, character_name: str):
     results = await logic.delete_character(character_name)
     await interaction.response.send_message(results)
-
+#NOTE: added to test command
 @app_commands.command(name='edit_person')
 @app_commands.describe(person_name='Enter a person name', person_name_new='Enter new person name', relation='Enter relation status', guild='Enter a guild')
 async def edit_person(interaction: discord.Interaction, person_name: str, person_name_new: str, relation: str, guild: str):
     results = await logic.edit_person(person_name, person_name_new, relation, guild)
     await interaction.response.send_message(results)
-
+#NOTE: added to test command
 @app_commands.command(name='edit_character')
 @app_commands.describe(character_name='Enter a character name', character_name_new='Enter new character name', character_class='Enter a character class', level='Enter level', person_name='Enter a person name')
 async def edit_character(interaction: discord.Interaction, character_name: str, character_name_new: str, character_class: str, level: int, person_name: str):
     results = await logic.edit_character(character_name, character_name_new, character_class, level, person_name)
     await interaction.response.send_message(results)
-
+#NOTE: added to test command
 @app_commands.command(name='who')
 @app_commands.describe(character_name='Enter a character name')
 async def who(interaction: discord.Interaction, character_name: str):
     results = await logic.who(character_name)
     await interaction.response.send_message(results)
-
+#NOTE: added to test command
 @app_commands.command(name='get_characters')
 @app_commands.describe(person_name='Enter a person name')
 async def get_characters(interaction: discord.Interaction, person_name: str):
@@ -65,7 +79,7 @@ async def get_characters(interaction: discord.Interaction, person_name: str):
             await interaction.followup.send(chunk)
     else:
         await interaction.followup.send(results)
-
+#NOTE: added to test command
 @app_commands.command(name='get_person_table')
 @app_commands.describe(guild='Optional: Enter a guild')
 async def get_person_table(interaction: discord.Interaction, guild: str = None):
@@ -78,7 +92,7 @@ async def get_person_table(interaction: discord.Interaction, guild: str = None):
             await interaction.followup.send(chunk)
    else:
         await interaction.followup.send(results)
-
+#NOTE: added to test command
 @app_commands.command(name='get_characters_table')
 @app_commands.describe(guild='Optional: Enter a guild', character_class='Optional: Enter a character class')
 async def get_characters_table(interaction: discord.Interaction, guild: str = None, character_class: str = None):
@@ -94,7 +108,7 @@ async def get_characters_table(interaction: discord.Interaction, guild: str = No
 
 async def parse_image(message: dict):
     await logic.parse_image(message)
-
+#NOTE: added to test command
 @app_commands.command(name='add_raid_event')
 @app_commands.describe(raid_name='Enter a raid name')
 async def add_raid_event(interaction: discord.Interaction, raid_name: str):
@@ -103,13 +117,13 @@ async def add_raid_event(interaction: discord.Interaction, raid_name: str):
         await interaction.response.send_message(results)
     else:
         await interaction.response.send_message("Error (add_raid): no guild passed.")
-
+#NOTE: added to test command
 @app_commands.command(name='add_person_to_raid')
 @app_commands.describe(person_name='Enter person', raid_id='Enter raid id')
 async def add_person_to_raid(interaction: discord.Interaction, person_name: str, raid_id: int):
     results = await logic.add_person_to_raid(person_name, raid_id)
     await interaction.response.send_message(results)
-   
+
 @add_person_to_raid.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.raid_name_autocompletion(interaction, current)
@@ -117,7 +131,7 @@ async def raid_name_autocompletion(interaction: discord.Interaction, current: st
 @add_person_to_raid.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.person_name_autocompletion(interaction, current)
-
+#NOTE: added to test command
 @app_commands.command(name='delete_raid_event')
 @app_commands.describe(raid_id='Enter raid id')
 async def delete_raid_event(interaction: discord.Interaction, raid_id: int):
@@ -127,13 +141,13 @@ async def delete_raid_event(interaction: discord.Interaction, raid_id: int):
 @delete_raid_event.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.raid_name_autocompletion(interaction, current)
-
+#NOTE: added to test command
 @app_commands.command(name='delete_person_from_raid')
 @app_commands.describe(raid_id='Enter raid id', person_name='Enter person')
 async def delete_person_from_raid(interaction: discord.Interaction, person_name: str, raid_id: int):  
     results = await logic.delete_person_from_raid(person_name, raid_id)
     await interaction.response.send_message(results)
-   
+
 @delete_person_from_raid.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.person_name_autocompletion(interaction, current)
@@ -141,7 +155,7 @@ async def person_name_autocompletion(interaction: discord.Interaction, current: 
 @delete_person_from_raid.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.raid_name_autocompletion(interaction, current)
-
+#NOTE: added to test command
 @app_commands.command(name='award_loot')
 @app_commands.describe(item_name='Enter item_name', person_name='Enter person', raid_id='Enter raid ID')
 async def award_loot(interaction: discord.Interaction, item_name: str, person_name: str, raid_id: int):  
@@ -159,7 +173,7 @@ async def person_name_autocompletion(interaction: discord.Interaction, current: 
 @award_loot.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.raid_name_autocompletion(interaction, current)
-
+#NOTE: added to test command
 @app_commands.command(name='remove_loot')
 @app_commands.describe(item_name='Enter item_name', person_name='Enter person', raid_id='Enter raid ID')
 async def remove_loot(interaction: discord.Interaction, item_name: str, person_name: str, raid_id: int):  
@@ -177,7 +191,7 @@ async def person_name_autocompletion(interaction: discord.Interaction, current: 
 @remove_loot.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.raid_name_autocompletion(interaction, current)
-
+#NOTE: added to test command
 @app_commands.command(name='register_person')
 @app_commands.describe(person_name='Enter person')
 async def register_person(interaction: discord.Interaction, person_name: str, user_name: str):  
@@ -187,7 +201,7 @@ async def register_person(interaction: discord.Interaction, person_name: str, us
 @register_person.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.person_name_autocompletion(interaction, current)
-
+#NOTE: added to test command
 @app_commands.command(name='unregister_person')
 @app_commands.describe(person_name='Enter person')
 async def unregister_person(interaction: discord.Interaction, person_name: str):  

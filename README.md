@@ -4,6 +4,8 @@
 ##### Docker Hub:
 [https://hub.docker.com/repository/docker/hikemalliday/froakbot/general](https://hub.docker.com/r/hikemalliday/froakbot)
 
+##### Currently undergoing a refactor that will allow me to write some assertions (under the guidance of a senior dev friend of mine)
+
 Froakbot is not only a DKP / Loot tracking bot, but also has an image parsing feature that returns data about the game state.
 
 ### Image Parser:
@@ -22,13 +24,14 @@ Also contains basic CRUD commands for search of character data.
 
 ### Database architecture:
 
-![alt_text](https://cdn.discordapp.com/attachments/617825237752479751/1196965683154653284/image.png?ex=65b98c29&is=65a71729&hm=c6cce415b2783b07f244a483501f47ec784310542173f35bbf053cbb0cf5d187&)
+![alt_text](https://cdn.discordapp.com/attachments/1180635913022353499/1197241520181485708/image.png?ex=65ba8d0e&is=65a8180e&hm=431f1b2bbc59cdc0ff7f39cb92e64e19bc88167d82b6c9e80ee28e5d6b12f8f1&)
 
 # Dev Notes:
 
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
 
-I copied the Project Quarm item database, so that when awarding raid loot, when you input the item_name string, if spelled close enough, it will enter the correct spelling of the item into the database. This allows for standardized data that is more queryable.
+I created 'items_master' by copying a few columns from the Project Quarm items table, so that when awarding raid loot, when you input the item_name string, if spelled close enough, it will enter the correct spelling of the item into the database. This allows for standardized data that is more queryable. 'items_master' also contains a column called 'icon', which is a number that maps an items in game image to an image file. I scraped all of the item image files from the P99 wiki, using my own [webscraper](https://github.com/hikemalliday/p99wiki-scraper), and the images and correctly mapped with the correct ID's. This will allow me to returnn a nice looking 'card' in Discord that will show a picture of the item when loot is awarded.
+
 All of the CRUD commands are reading and writing from duplicate 'test' tables I created, because I am currently undergoing heavy work on this project.
 
 Created in Python. The bot reads / writes to a local SQLite database. The image parsing library used is Pytesseract.

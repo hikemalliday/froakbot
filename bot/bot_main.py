@@ -18,8 +18,8 @@ def run_discord_bot():
         @bot.event
         async def on_ready():
             # USE WITH CAUTION:
-            db_functions.reset_test_tables(bot)
-            db_functions.reset_tables(bot)
+            #db_functions.reset_test_tables(bot)
+            #db_functions.reset_tables(bot)
             print('Bot is Up and Ready!')
             try:
                 for command in bot_commands.slash_commands:
@@ -29,6 +29,7 @@ def run_discord_bot():
                 print(f'Synced {len(synced)} command(s)')
             except Exception as e:
                 print(e)
+        # There is only 1 text based command. This particular command is not well suited for Slash Commands:
         @bot.event
         async def on_message(message):
             commands = {

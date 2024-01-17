@@ -180,15 +180,23 @@ async def raid_name_autocompletion(interaction: discord.Interaction, current: st
 
 @app_commands.command(name='register_person')
 @app_commands.describe(person_name='Enter person')
-async def register_person(interaction: discord.Interaction, person_name: str):  
-    results = await logic.register_person(person_name)
+async def register_person(interaction: discord.Interaction, person_name: str, user_name: str):  
+    results = await logic.register_person(person_name, user_name)
     await interaction.response.send_message(results)
 
 @register_person.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.person_name_autocompletion(interaction, current)
 
+@app_commands.command(name='unregister_person')
+@app_commands.describe(person_name='Enter person')
+async def unregister_person(interaction: discord.Interaction, person_name: str):  
+    results = await logic.unregister_person(person_name)
+    await interaction.response.send_message(results)
 
+@register_person.autocomplete('person_name')
+async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    return await helper.person_name_autocompletion(interaction, current)
 
 slash_commands = [
     add_person, 
@@ -207,5 +215,6 @@ slash_commands = [
     delete_person_from_raid,
     award_loot,
     remove_loot,
-    register_person
+    register_person,
+    unregister_person
     ]

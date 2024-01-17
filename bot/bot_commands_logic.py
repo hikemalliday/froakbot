@@ -10,7 +10,7 @@ from PIL import Image
 from io import BytesIO
 import re
 from bot.bot_instance import bot
-import db_functions
+
 db_path = env('DB_PATH')
 url = env('URL')
 
@@ -545,9 +545,44 @@ async def parse_image(message: dict):
         print('parse_image() error:', str(e))
         return str(e)
     
-async def register_person(person_name: str, discord_username: str):
-    # Create a 'discord_username' table
-    pass
+async def register_person(person_name: str, user_name: str):
+    try:
+        conn = bot.db_connection
+        c = conn.cursor()
+        # SELECT first to make sure person exists
+        c.execute('''SELECT person_name FROM person_test WHERE person_name = ?''', (person_name,))
+        result = c.fetchone()
+        if not result:
+            return f'Person {person_name} not found. (logic.register_person())'
+        c.execute('''UPDATE person_test SET username = ? WHERE person_name = ?''', (user_name, person_name))
+        conn.commit()
+        return f'Username: {user_name} registered for person: {person_name}'
+        
+    except Exception as e:
+        print(e)
+        return f'logic.register_person() error: {e}'
+    
+async def unregister_person(person_name: str):
+    try:
+        conn = bot.db_connection
+        c = conn.cursor()
+        # SELECT first to make sure person exists
+        c.execute('''SELECT person_name FROM person_test WHERE person_name = ?''', (person_name,))
+        result = c.fetchone()
+        if not result:
+            return f'Person {person_name} not found. (logic.unregister_person())'
+        c.execute('''SELECT username from person_test WHERE person_name = ?''', (person_name,))
+        result = c.fetchone()
+        if result:
+            user_name = result[0]
+        c.execute('''UPDATE person_test SET username = NULL WHERE person_name = ?''', (person_name,))
+        conn.commit()
+        return f'Username: {user_name} unregistered for person: {person_name}'
+        
+    except Exception as e:
+        print(e)
+        return f'logic.register_person() error: {e}'
+    
 
 async def add_raid_event(guild: object, raid_name: str):
     try:

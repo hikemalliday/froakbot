@@ -749,7 +749,7 @@ async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
         print(error_message)
         return (error_message, e)
 
-async def run_all_commands(discord_server: object, succeed):
+async def test_run_all_commands(discord_server: object, succeed):
     person_name = 'Grixus' if succeed else False
     person_name_new = 'Grixus' if succeed else False
     relation = 'Friendly' if succeed else False
@@ -844,8 +844,8 @@ async def run_all_commands(discord_server: object, succeed):
             print(results)
         return results, exceptions
     except Exception as e:
-        print(f'logic.run_all_commands() exception: {str(e)}',)
-        return ((f'logic.run_all_commands() exception: {str(e)}', e))
+        print(f'logic.test_run_all_commands() exception: {str(e)}',)
+        return ((f'logic.test_run_all_commands() exception: {str(e)}', e))
         
 
 

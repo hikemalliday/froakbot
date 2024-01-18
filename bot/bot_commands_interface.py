@@ -9,9 +9,9 @@ selected_raid_id = None
 # This implies that no exceptions were thrown inside any of the slash commands.
 # This allows me to run all commands after adding a feature of refactoring, to help find bugs.
 @app_commands.command(name='run_all_commands')
-async def run_all_commands(interaction: discord.Interaction):
+async def test_run_all_commands(interaction: discord.Interaction):
     await interaction.response.defer()
-    results, exceptions = await logic.run_all_commands(interaction.guild, True)
+    results, exceptions = await logic.test_run_all_commands(interaction.guild, True)
     for result in results:
         if len(result) > 1994:
             await helper.print_large_message(interaction, result)

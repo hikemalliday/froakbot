@@ -43,7 +43,7 @@ def create_virtual_table(bot: object):
     except Exception as e:
         print('Error creating virtual table:', e)
 
-# Created from the Proect Quarm items database.
+# Created from the Project Quarm items database.
 def create_items_master_table(bot: object):
     try:
         c1 = bot.db_connection.cursor()

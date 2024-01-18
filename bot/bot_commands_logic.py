@@ -19,20 +19,20 @@ db_path = env('DB_PATH')
 url = env('URL')
 
 async def add_person(person_name: str, relation: str, guild: str) -> tuple:
-    error = None
-    if relation.lower() in ['enemy', 'foe', 'opponent']:
-        relation = 0
-    elif relation.lower() in ['friend', 'friendly', 'pal']:
-        relation = 1
-    elif relation.lower() in ['neutral']:
-        relation = 2
-    else:
-        return ('Invalid input. Please enter "friendly", "enemy", or "neutral"', error)
-    
-    person_name = person_name.title()
-    guild = guild.title()
-    
     try:
+        error = None
+        if relation.lower() in ['enemy', 'foe', 'opponent']:
+            relation = 0
+        elif relation.lower() in ['friend', 'friendly', 'pal']:
+            relation = 1
+        elif relation.lower() in ['neutral']:
+            relation = 2
+        else:
+            return ('Invalid input. Please enter "friendly", "enemy", or "neutral"', error)
+    
+        person_name = person_name.title()
+        guild = guild.title()
+
         conn = bot.db_connection
         c = conn.cursor()
         c.execute(
@@ -48,25 +48,25 @@ async def add_person(person_name: str, relation: str, guild: str) -> tuple:
             return (message, error)
         return (helper.add_person_embed(person_name, relation, guild), error)
     except Exception as e:
+        # Returning None value 'error' for UNIQUE constraint. Its not the type of bug I am looking for in the test.
         if "UNIQUE constraint failed" in str(e):
             message = f'```Person "{person_name}" already exists in table "person{table_flag}" table. Aborting insert.```'
             helper.send_message_to_website(message)
-            return (message, e)
+            return (message, error)
         else:
-            print("SQLite error, database.add_person():", str(e))
-            return (f"SQLite error, database.add_person(): f{str(e)}", e)
+            print("EXCEPTION: logic.add_person():", str(e))
+            return (f"EXCEPTION: logic.add_person(): f{str(e)}", e)
       
 async def add_character(character_name: str, character_class: str, level: int, person_name: str) -> tuple:
-    error = None
-    if character_class.lower() == "mage":
-        character_class = "Magician"
-    if character_class.lower() in ['shadowknight', 'shadow knight']:
-        character_class = "Shadowknight"
-    
-    if character_class.title() not in class_names:
-        return (f'Invalid input. Please provide a valid class name: {str(class_names)}', error)
-    
     try:
+        error = None
+        if character_class.lower() == "mage":
+            character_class = "Magician"
+        if character_class.lower() in ['shadowknight', 'shadow knight']:
+            character_class = "Shadowknight"
+    
+        if character_class.title() not in class_names:
+            return (f'Invalid input. Please provide a valid class name: {str(class_names)}', error)
         conn = bot.db_connection
         c = conn.cursor()
         c.execute(f"SELECT * FROM person{table_flag} WHERE person_name = ?", (person_name,))
@@ -100,13 +100,13 @@ async def add_character(character_name: str, character_class: str, level: int, p
             return (helper.add_character_embed(character_name, character_class, level, person_name), error)
 
     except Exception as e:
-        print(f'SQLite error, database.add_char(): {str(e)}')
-        return (f'SQLite error, database.add_char(): {str(e)}', e)
+        print(f'EXCEPTION: logic.add_char(): {str(e)}')
+        return (f'EXCEPTION: logic.add_char(): {str(e)}', e)
         
 async def delete_person(person_name: str) -> tuple:
-    error = None
-    person_name = person_name.title()
     try:
+        error = None
+        person_name = person_name.title()
         conn = bot.db_connection
         c = conn.cursor()
         c.execute(f"""DELETE FROM person{table_flag} WHERE person_name = ?""", (person_name,))
@@ -120,13 +120,13 @@ async def delete_person(person_name: str) -> tuple:
             helper.send_message_to_website(message)
             return (message, error)
     except Exception as e:
-        print(f'delete_person() error: {str(e)}')
-        return(f'delete_person() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.delete_person(): {str(e)}')
+        return(f'EXCEPTION: logic.delete_person(): {str(e)}', e)
 
 async def delete_character(character_name: str) -> tuple:
-    error = None
-    character_name = character_name.title()
     try:
+        error = None
+        character_name = character_name.title()
         conn = bot.db_connection
         c = bot.db_connection.cursor()
         c.execute(f"""DELETE FROM character{table_flag} WHERE char_name = ?""", (character_name,))
@@ -142,25 +142,24 @@ async def delete_character(character_name: str) -> tuple:
             return (message, error)
 
     except Exception as e:
-        print(f'delete_character() error: {str(e)}')
-        return (f'delete_person() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.delete_character(): {str(e)}')
+        return (f'EXCEPTION: logic.delete_person(): {str(e)}', e)
         
 async def edit_person(person_name: str, person_name_new: str, relation: str, guild: str) -> tuple:
-    error = None
-    if relation.lower() in ['enemy', 'foe', 'opponent']:
-        relation = 0
-    elif relation.lower() in ['friend', 'friendly', 'pal']:
-        relation = 1
-    elif relation.lower() in ['neutral']:
-        relation = 2
-    else:
-        return ('Invalid input. Please enter "friendly", "enemy", or "neutral"', error)
-    
-    person_name = person_name.title()
-    person_name_new = person_name_new.title()
-    guild = guild.title()
-
     try:
+        error = None
+        if relation.lower() in ['enemy', 'foe', 'opponent']:
+            relation = 0
+        elif relation.lower() in ['friend', 'friendly', 'pal']:
+            relation = 1
+        elif relation.lower() in ['neutral']:
+            relation = 2
+        else:
+            return ('Invalid input. Please enter "friendly", "enemy", or "neutral"', error)
+
+        person_name = person_name.title()
+        person_name_new = person_name_new.title()
+        guild = guild.title()
         conn = bot.db_connection
         c = conn.cursor()
         c.execute(
@@ -175,8 +174,8 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
             return (message, error)
 
     except Exception as e:
-        print(f'SQLite error, bot_commands.edit_char(): {str(e)}')
-        return (f'SQLite error, bot_commands.edit_char(): {str(e)}', e)
+        print(f'EXCEPTION: logic.edit_char(): {str(e)}')
+        return (f'EXCEPTION: logic.edit_char(): {str(e)}', e)
     try:
         c.execute(
             """UPDATE person SET person_name = ?, relation = ?, guild = ? WHERE person_name = ?""",
@@ -195,23 +194,22 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
         helper.send_message_to_website(message)
         return (message, error)
     except Exception as e:
-        print(f'edit_person() error: {str(e)}')
-        return (f'edit_person() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.edit_person(): {str(e)}')
+        return (f'EXCEPTION: logic.edit_person(): {str(e)}', e)
 
 async def edit_character(character_name: str, character_name_new: str, character_class: str, level: int, person_name: str) -> tuple:
-    error = None
-    character_name = character_name.title()
-    character_name_new = character_name_new.title()
-    person_name = person_name.title()
-
-    if character_class.lower() == "mage":
-        character_class = "Magician"
-    if character_class.lower() in ['shadowknight', 'shadow knight']:
-        character_class = "Shadowknight"
-    if character_class.title() not in class_names:
-        return (f'Invalid input. Please provide a valid class name: {str(class_names)}', error)
-
     try:
+        error = None
+        character_name = character_name.title()
+        character_name_new = character_name_new.title()
+        person_name = person_name.title()
+
+        if character_class.lower() == "mage":
+            character_class = "Magician"
+        if character_class.lower() in ['shadowknight', 'shadow knight']:
+            character_class = "Shadowknight"
+        if character_class.title() not in class_names:
+            return (f'Invalid input. Please provide a valid class name: {str(class_names)}', error)
         conn = bot.db_connection
         c = conn.cursor()
         c.execute(
@@ -225,8 +223,8 @@ async def edit_character(character_name: str, character_name_new: str, character
             return (message, error)
 
     except Exception as e:
-        print(f'SQLite error, bot_commands.edit_char(): {str(e)}')
-        return (f'SQLite error, bot_commands.edit_char(): {str(e)}', e)
+        print(f'EXCEPTION: logic.edit_char(): {str(e)}')
+        return (f'EXCEPTION: logic.edit_char(): {str(e)}', e)
 
     try:
         c.execute(
@@ -239,14 +237,13 @@ async def edit_character(character_name: str, character_name_new: str, character
         helper.send_message_to_website(message)
         return (message, error)
     except Exception as e:
-        print(f'edit_character() error:  {str(e)}')
-        return (f'edit_character() error:  {str(e)}', e)
+        print(f'EXCEPTION: logic.edit_character():  {str(e)}')
+        return (f'EXCEPTION: logic.edit_character():  {str(e)}', e)
     
 async def who(character_name: str) -> tuple:
-    error = None
-    character_name = character_name.title()
-
     try:
+        error = None
+        character_name = character_name.title()
         conn = bot.db_connection
         c = conn.cursor()
         c.execute(f"""SELECT * FROM character{table_flag} WHERE char_name = ?""", (character_name,))
@@ -280,13 +277,13 @@ async def who(character_name: str) -> tuple:
         return (results_string, error)
 
     except Exception as e:
-        print(f'who() error: {str(e)}')
-        return (f'who() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.who(): {str(e)}')
+        return (f'EXCEPTION: logic.who(): {str(e)}', e)
 
 async def get_characters(person_name: str) -> tuple:
-    error = None
-    person_name = person_name.title()
     try:
+        error = None
+        person_name = person_name.title()
         conn = bot.db_connection
         c = conn.cursor()
         c.execute(
@@ -304,14 +301,14 @@ async def get_characters(person_name: str) -> tuple:
         helper.send_message_to_website(formatted_characters)
         return ("```" + formatted_characters + "```", error)
     except Exception as e:
-        print(f'get_characters() error: {str(e)}')
-        return (f'get_characters() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.get_characters(): {str(e)}')
+        return (f'EXCEPTION: logic.get_characters(): {str(e)}', e)
     
 async def get_person_table(guild: str) -> tuple:
-    error = None
-    if guild:
-        guild = guild.title()
-        try:
+    try:
+        error = None
+        if guild:
+            guild = guild.title()
             conn = bot.db_connection
             c = conn.cursor()
             c.execute("""SELECT * FROM person WHERE guild = ?""", (guild,))
@@ -332,9 +329,9 @@ async def get_person_table(guild: str) -> tuple:
             helper.send_message_to_website(results_string)
             results_string = "```" + results_string + "```"
             return (results_string, error)
-        except Exception as e:
-            print(f'get_person_table() error (first conditional): {str(e)}')
-            return (f'get_person_table() error (first conditional): {str(e)}', e)
+    except Exception as e:
+        print(f'EXCEPTION: logic.get_person_table()(first conditional): {str(e)}')
+        return (f'EXCEPTION: logic.get_person_table()(first conditional): {str(e)}', e)
     else:
         try:
             c = conn.cursor()
@@ -357,23 +354,22 @@ async def get_person_table(guild: str) -> tuple:
             helper.send_message_to_website(results_string)
             return (results_string, error)
         except Exception as e:
-            print(f'get_person_table() error (else statement): {str(e)}')
-            return (f'get_person_table() error (else statement): {str(e)}', e)
+            print(f'EXCEPTION: logic.get_person_table()(else statement): {str(e)}')
+            return (f'EXCEPTION: logic.get_person_table()else statement): {str(e)}', e)
         
 async def get_characters_table(guild: str, character_class: str) -> tuple:
-    error = None
-    if guild:
-        guild = guild.title()
-    if character_class:
-        character_class = character_class.title()
-    if character_class and character_class.lower() == "mage":
-        character_class = "Magician"
-    if character_class and character_class.lower() in ['shadowknight', 'shadow knight']:
-        character_class = "Shadowknight"
-    if character_class and character_class not in class_names:
-        return (f'Invalid input. Please provide a valid class name: {str(class_names)}', error)
-
     try:
+        error = None
+        if guild:
+            guild = guild.title()
+        if character_class:
+            character_class = character_class.title()
+        if character_class and character_class.lower() == "mage":
+            character_class = "Magician"
+        if character_class and character_class.lower() in ['shadowknight', 'shadow knight']:
+            character_class = "Shadowknight"
+        if character_class and character_class not in class_names:
+            return (f'Invalid input. Please provide a valid class name: {str(class_names)}', error)
         conn = bot.db_connection
         c = conn.cursor()
         if character_class and guild:
@@ -398,8 +394,8 @@ async def get_characters_table(guild: str, character_class: str) -> tuple:
             c.execute(f"SELECT * FROM character{table_flag}")
         results = c.fetchall()
     except Exception as e:
-        print(f'get_characters_table() error: {str(e)}')
-        return (f'get_characters_table() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.get_characters_table(): {str(e)}')
+        return (f'EXCEPTION: logic.get_characters_table(): {str(e)}', e)
 
     sorted_results = sorted(results, key=lambda result: result[0])
     results_string = ''
@@ -562,8 +558,8 @@ async def parse_image(message: dict):
         return str(e)
     
 async def register_person(person_name: str, username: str) -> tuple:
-    error = None
     try:
+        error = None
         conn = bot.db_connection
         c = conn.cursor()
         # SELECT first to make sure person exists
@@ -576,12 +572,12 @@ async def register_person(person_name: str, username: str) -> tuple:
         return (f'Username: {username} registered for person: {person_name}', error)
         
     except Exception as e:
-        print(f'logic.register_person() error: {str(e)}')
-        return (f'logic.register_person() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.register_person(): {str(e)}')
+        return (f'EXCEPTION: logic.register_person(): {str(e)}', e)
     
 async def unregister_person(person_name: str) -> tuple:
-    error = None
     try:
+        error = None
         conn = bot.db_connection
         c = conn.cursor()
         # SELECT first to make sure person exists
@@ -598,12 +594,12 @@ async def unregister_person(person_name: str) -> tuple:
         return (f'Username: {username} unregistered for person: {person_name}', error)
         
     except Exception as e:
-        print(f'logic.register_person() error: {str(e)}')
-        return (f'logic.register_person() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.register_person(): {str(e)}')
+        return (f'EXCEPTION: logic.register_person(): {str(e)}', e)
     
 async def add_raid_event(guild: object, raid_name: str) -> tuple:
-    error = None
     try:
+        error = None
         timestamp = datetime.now().strftime("%m-%d-%Y")
         raiders = await helper.get_most_populated_channel(guild)
         if raiders is None:
@@ -622,12 +618,12 @@ async def add_raid_event(guild: object, raid_name: str) -> tuple:
             conn.commit()
         return ('Raid successfully added', error)
     except Exception as e:
-        print(f'add_raid_event(): {str(e)}')
-        return (f'add_raid_event(): {str(e)}', e)
+        print(f'EXCEPTION: logic.add_raid_event(): {str(e)}')
+        return (f'EXCEPTION: logic.add_raid_event(): {str(e)}', e)
 
 async def delete_raid_event(raid_id: int) -> tuple:
-    error = None
     try:
+        error = None
         conn = bot.db_connection
         with conn:
             c = bot.db_connection.cursor()
@@ -647,12 +643,12 @@ async def delete_raid_event(raid_id: int) -> tuple:
             helper.send_message_to_website(message)
             return (message, error)
     except Exception as e:
-        print(f'delete_raid_event() error: {str(e)}')
-        return (f'delete_raid_event() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.delete_raid_event() error: {str(e)}')
+        return (f'EXCEPTION: logic.delete_raid_event() error: {str(e)}', e)
 
 async def add_person_to_raid(person_name: str, raid_id: int) -> tuple:
-    error = None
     try:
+        error = None
         conn = bot.db_connection
         c = conn.cursor()
         # SELECT first to make sure char exists
@@ -667,18 +663,17 @@ async def add_person_to_raid(person_name: str, raid_id: int) -> tuple:
         return (message, error)
     except Exception as e:
         if 'UNIQUE constraint failed' in str(e):
-            print(f'add_person_to_raid() UNIQUE constraint error: {str(e)}')
+            print(f'EXCEPTION: logic.add_person_to_raid() UNIQUE constraint: {str(e)}')
             return (f'Person {person_name} is already in raid {raid_id}.', error)
-        print(f'add_person_to_raid() error: {str(e)}')
-        return (f'add_person_to_raid() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.add_person_to_raid(): {str(e)}')
+        return (f'EXCEPTION: logic.add_person_to_raid(): {str(e)}', e)
 
 async def delete_person_from_raid(person_name: str, raid_id: int) -> tuple:
-    error = None
     try:
+        error = None
         conn = bot.db_connection
         with conn:
             c = bot.db_connection.cursor()
-            print('delete_person_from_raid() raid_id:', raid_id)
             c.execute(f'''SELECT raid_name, raid_date FROM raid_master{table_flag} WHERE raid_id = ?''', (raid_id,))
             result = c.fetchone()
             if result:
@@ -694,17 +689,14 @@ async def delete_person_from_raid(person_name: str, raid_id: int) -> tuple:
             helper.send_message_to_website(message)
             return (message, error)
     except Exception as e:
-        print(f'delete_person_from_raid() error: {str(e)}')
-        return (f'delete_person_from_raid() error: {str(e)}', e)
+        print(f'EXCEPTION: logic.delete_person_from_raid(): {str(e)}')
+        return (f'EXCEPTION: logic.delete_person_from_raid(): {str(e)}', e)
 
 async def award_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
-    error = None
     try:
+        error = None
         conn = bot.db_connection
         with conn:
-            print('logic.awardItem():')
-            print(f'item_name: {item_name}, person_name: {person_name}, raid_id: {raid_id}')
-
             c = conn.cursor()
             c.execute(f'''SELECT person_name FROM person{table_flag} WHERE person_name = ?''', (person_name,))
             result = c.fetchone()
@@ -722,18 +714,15 @@ async def award_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
             conn.commit()
             return (f'Item {item_name} awarded to {person_name} at {raid_name}', error)
     except Exception as e:
-        error_message = f'logic.award_item() error: {str(e)}'
+        error_message = f'EXCEPTION: logic.award_item(): {str(e)}'
         print(error_message)
         return (error_message, e)
     
 async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
-    error = None
     try:
+        error = None
         conn = bot.db_connection
         with conn:
-            print('logic.remove_loot():')
-            print(f'item_name: {item_name}, person_name: {person_name}, raid_id: {raid_id}')
-
             c = conn.cursor()
             c.execute(f'''SELECT person_name FROM person{table_flag} WHERE person_name = ?''', (person_name,))
             result = c.fetchone()
@@ -748,8 +737,6 @@ async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
             raid_name = result[0]
             c.execute(f'''SELECT * FROM person_loot{table_flag} WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
             results = c.fetchall()
-            print(f"logic.remove_loot() query string: f'''SELECT * FROM person_loot{table_flag} WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id)")
-            print('result after SELECT: ', str(results))
             if not results:
                 return (f'ERROR: Item: {item_name} for person: {person_name} NOT FOUND at raid: {raid_name}', error)
             
@@ -758,24 +745,23 @@ async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
             conn.commit()
             return (f'Item {item_name} removed from {person_name} at {raid_name}.', error)
     except Exception as e:
-        error_message = f'logic.remove_loot() error: {e}'
+        error_message = f'EXCEPTION: logic.remove_loot(): {e}'
         print(error_message)
         return (error_message, e)
 
-async def run_all_commands(discord_server: object):
-    person_name = 'Grixus'
-    person_name_new = 'Grixus'
-    relation = 'Friendly'
-    guild = 'Tempest'
-    character_name = 'Penalty'
-    character_name_new = 'Penalty'
-    character_class = 'Monk'
-    level = 60
-    username = 'grixus.'
-    raid_name = 'Golems'
-    raid_id = 1
-    item_name = 'Amulet of Necropotence'
-
+async def run_all_commands(discord_server: object, succeed):
+    person_name = 'Grixus' if succeed else False
+    person_name_new = 'Grixus' if succeed else False
+    relation = 'Friendly' if succeed else False
+    guild = 'Tempest' if succeed else False
+    character_name = 'Penalty' if succeed else False
+    character_name_new = 'Penalty' if succeed else False
+    character_class = 'Monk' if succeed else False
+    level = 60 if succeed else False
+    username = 'grixus.' if succeed else False
+    raid_name = 'Golems' if succeed else False
+    raid_id = 1 if succeed else False
+    item_name = 'Amulet of Necropotence' if succeed else False
     # Initialize the results list with the header string
     results = []
     exceptions = []
@@ -820,7 +806,7 @@ async def run_all_commands(discord_server: object):
         add_person_to_raid_result, add_person_to_raid_exception = await add_person_to_raid(person_name, raid_id)
         results.append(add_person_to_raid_result)
         exceptions.append(add_person_to_raid_exception)
-
+        
         award_loot_result, award_loot_exception = await award_loot(item_name, person_name, raid_id)
         results.append(award_loot_result)
         exceptions.append(award_loot_exception)
@@ -853,7 +839,9 @@ async def run_all_commands(discord_server: object):
         results.append(delete_character_result)
         exceptions.append(delete_character_exception)
 
-        print(results)
+        if succeed == False:
+            print("False results: ")
+            print(results)
         return results, exceptions
     except Exception as e:
         print(f'logic.run_all_commands() exception: {str(e)}',)

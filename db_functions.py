@@ -76,7 +76,7 @@ def create_items_master_table(bot: object):
     except mysql.connector.Error as e:
         print(f'Error connection to MariaDB: {e}')
         return
-# Used to migrate the old tables into the new schema (descrated):
+# Used to migrate the old tables into the new schema:
 def migrate_players_db(bot: object):
     try:
         c = bot.db_connection.cursor()
@@ -105,7 +105,7 @@ def migrate_players_db_test(bot: object):
         print(e)
         return str(e)
     
-# Used to migrate the old tables into the new schema (desecrated):
+# Used to migrate the old tables into the new schema:
 def migrate_characters_db(bot: object):
     try:
         c = bot.db_connection.cursor()

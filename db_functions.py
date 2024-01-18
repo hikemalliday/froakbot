@@ -3,7 +3,7 @@ import mysql.connector
 from decouple import config as env
 from datetime import datetime
  
-# The term 'test' in this module does not imply tradional unit or end to end tests, its for creating test tables that I can read / write
+# The term 'test' in this module does not imply traditional unit or end to end tests, its for creating test tables that I can read / write
 
 
 def levenshtein_distance(string1, string2):

@@ -8,10 +8,10 @@ selected_raid_id = None
 # 'Test' that runs all slash commands, and expects the return 'exceptions' array to only contain None as every element.
 # This implies that no exceptions were thrown inside any of the slash commands.
 # This allows me to run all commands after adding a feature of refactoring, to help find bugs.
-@app_commands.command(name='run_all_commands')
+@app_commands.command(name='test_run_all_commands')
 async def test_run_all_commands(interaction: discord.Interaction):
     await interaction.response.defer()
-    results, exceptions = await logic.test_run_all_commands(interaction.guild, True)
+    results, exceptions = await logic.test_run_all_commands(interaction.guild, False)
     for result in results:
         if len(result) > 1994:
             await helper.print_large_message(interaction, result)
@@ -20,8 +20,8 @@ async def test_run_all_commands(interaction: discord.Interaction):
 
     for exception in exceptions:
         if exception:
-            print(f'EXCEPTION found: {exception}')
-            await interaction.followup.send(f'EXCEPTION found: {exception}')
+            print(exception)
+            await interaction.followup.send(exception)
     
     if all(exception is None for exception in exceptions):
         print('bot_commands_interface.run_all_commands:')
@@ -232,5 +232,5 @@ slash_commands = [
     remove_loot,
     register_person,
     unregister_person,
-    run_all_commands
+    test_run_all_commands
     ]

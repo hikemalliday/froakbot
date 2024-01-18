@@ -54,8 +54,9 @@ async def add_person(person_name: str, relation: str, guild: str) -> tuple:
             helper.send_message_to_website(message)
             return (message, error)
         else:
-            print("EXCEPTION: logic.add_person():", str(e))
-            return (f"EXCEPTION: logic.add_person(): f{str(e)}", e)
+            error_message = f"EXCEPTION: logic.add_person(): {str(e)}"
+            print(error_message)
+            return (error_message, error_message)
       
 async def add_character(character_name: str, character_class: str, level: int, person_name: str) -> tuple:
     try:
@@ -100,8 +101,9 @@ async def add_character(character_name: str, character_class: str, level: int, p
             return (helper.add_character_embed(character_name, character_class, level, person_name), error)
 
     except Exception as e:
-        print(f'EXCEPTION: logic.add_char(): {str(e)}')
-        return (f'EXCEPTION: logic.add_char(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.add_char(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
         
 async def delete_person(person_name: str) -> tuple:
     try:
@@ -120,8 +122,9 @@ async def delete_person(person_name: str) -> tuple:
             helper.send_message_to_website(message)
             return (message, error)
     except Exception as e:
-        print(f'EXCEPTION: logic.delete_person(): {str(e)}')
-        return(f'EXCEPTION: logic.delete_person(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.delete_person(): {str(e)}'
+        print(error_message)
+        return(error_message, error_message)
 
 async def delete_character(character_name: str) -> tuple:
     try:
@@ -142,8 +145,9 @@ async def delete_character(character_name: str) -> tuple:
             return (message, error)
 
     except Exception as e:
-        print(f'EXCEPTION: logic.delete_character(): {str(e)}')
-        return (f'EXCEPTION: logic.delete_person(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.delete_character(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
         
 async def edit_person(person_name: str, person_name_new: str, relation: str, guild: str) -> tuple:
     try:
@@ -174,8 +178,9 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
             return (message, error)
 
     except Exception as e:
-        print(f'EXCEPTION: logic.edit_char(): {str(e)}')
-        return (f'EXCEPTION: logic.edit_char(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.edit_char(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
     try:
         c.execute(
             """UPDATE person SET person_name = ?, relation = ?, guild = ? WHERE person_name = ?""",
@@ -194,8 +199,9 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
         helper.send_message_to_website(message)
         return (message, error)
     except Exception as e:
-        print(f'EXCEPTION: logic.edit_person(): {str(e)}')
-        return (f'EXCEPTION: logic.edit_person(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.edit_person(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
 
 async def edit_character(character_name: str, character_name_new: str, character_class: str, level: int, person_name: str) -> tuple:
     try:
@@ -223,8 +229,9 @@ async def edit_character(character_name: str, character_name_new: str, character
             return (message, error)
 
     except Exception as e:
-        print(f'EXCEPTION: logic.edit_char(): {str(e)}')
-        return (f'EXCEPTION: logic.edit_char(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.edit_char(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
 
     try:
         c.execute(
@@ -237,8 +244,9 @@ async def edit_character(character_name: str, character_name_new: str, character
         helper.send_message_to_website(message)
         return (message, error)
     except Exception as e:
-        print(f'EXCEPTION: logic.edit_character():  {str(e)}')
-        return (f'EXCEPTION: logic.edit_character():  {str(e)}', e)
+        error_message = f'EXCEPTION: logic.edit_character():  {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
     
 async def who(character_name: str) -> tuple:
     try:
@@ -277,8 +285,9 @@ async def who(character_name: str) -> tuple:
         return (results_string, error)
 
     except Exception as e:
-        print(f'EXCEPTION: logic.who(): {str(e)}')
-        return (f'EXCEPTION: logic.who(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.who(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
 
 async def get_characters(person_name: str) -> tuple:
     try:
@@ -301,15 +310,16 @@ async def get_characters(person_name: str) -> tuple:
         helper.send_message_to_website(formatted_characters)
         return ("```" + formatted_characters + "```", error)
     except Exception as e:
-        print(f'EXCEPTION: logic.get_characters(): {str(e)}')
-        return (f'EXCEPTION: logic.get_characters(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.get_characters(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
     
 async def get_person_table(guild: str) -> tuple:
     try:
         error = None
+        conn = bot.db_connection
         if guild:
             guild = guild.title()
-            conn = bot.db_connection
             c = conn.cursor()
             c.execute("""SELECT * FROM person WHERE guild = ?""", (guild,))
             results = c.fetchall()
@@ -330,8 +340,9 @@ async def get_person_table(guild: str) -> tuple:
             results_string = "```" + results_string + "```"
             return (results_string, error)
     except Exception as e:
-        print(f'EXCEPTION: logic.get_person_table()(first conditional): {str(e)}')
-        return (f'EXCEPTION: logic.get_person_table()(first conditional): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.get_person_table()(first conditional): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
     else:
         try:
             c = conn.cursor()
@@ -354,8 +365,9 @@ async def get_person_table(guild: str) -> tuple:
             helper.send_message_to_website(results_string)
             return (results_string, error)
         except Exception as e:
-            print(f'EXCEPTION: logic.get_person_table()(else statement): {str(e)}')
-            return (f'EXCEPTION: logic.get_person_table()else statement): {str(e)}', e)
+            error_message = f'EXCEPTION: logic.get_person_table()(else statement): {str(e)}'
+            print(error_message)
+            return (error_message, error_message)
         
 async def get_characters_table(guild: str, character_class: str) -> tuple:
     try:
@@ -394,8 +406,9 @@ async def get_characters_table(guild: str, character_class: str) -> tuple:
             c.execute(f"SELECT * FROM character{table_flag}")
         results = c.fetchall()
     except Exception as e:
-        print(f'EXCEPTION: logic.get_characters_table(): {str(e)}')
-        return (f'EXCEPTION: logic.get_characters_table(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.get_characters_table(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
 
     sorted_results = sorted(results, key=lambda result: result[0])
     results_string = ''
@@ -572,8 +585,9 @@ async def register_person(person_name: str, username: str) -> tuple:
         return (f'Username: {username} registered for person: {person_name}', error)
         
     except Exception as e:
-        print(f'EXCEPTION: logic.register_person(): {str(e)}')
-        return (f'EXCEPTION: logic.register_person(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.register_person(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
     
 async def unregister_person(person_name: str) -> tuple:
     try:
@@ -594,8 +608,9 @@ async def unregister_person(person_name: str) -> tuple:
         return (f'Username: {username} unregistered for person: {person_name}', error)
         
     except Exception as e:
+        error_message = f'EXCEPTION: logic.register_person(): {str(e)}'
         print(f'EXCEPTION: logic.register_person(): {str(e)}')
-        return (f'EXCEPTION: logic.register_person(): {str(e)}', e)
+        return (error_message, error_message)
     
 async def add_raid_event(guild: object, raid_name: str) -> tuple:
     try:
@@ -618,8 +633,9 @@ async def add_raid_event(guild: object, raid_name: str) -> tuple:
             conn.commit()
         return ('Raid successfully added', error)
     except Exception as e:
-        print(f'EXCEPTION: logic.add_raid_event(): {str(e)}')
-        return (f'EXCEPTION: logic.add_raid_event(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.add_raid_event(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
 
 async def delete_raid_event(raid_id: int) -> tuple:
     try:
@@ -643,8 +659,9 @@ async def delete_raid_event(raid_id: int) -> tuple:
             helper.send_message_to_website(message)
             return (message, error)
     except Exception as e:
-        print(f'EXCEPTION: logic.delete_raid_event() error: {str(e)}')
-        return (f'EXCEPTION: logic.delete_raid_event() error: {str(e)}', e)
+        error_message = f'EXCEPTION: logic.delete_raid_event() error: {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
 
 async def add_person_to_raid(person_name: str, raid_id: int) -> tuple:
     try:
@@ -665,8 +682,9 @@ async def add_person_to_raid(person_name: str, raid_id: int) -> tuple:
         if 'UNIQUE constraint failed' in str(e):
             print(f'EXCEPTION: logic.add_person_to_raid() UNIQUE constraint: {str(e)}')
             return (f'Person {person_name} is already in raid {raid_id}.', error)
-        print(f'EXCEPTION: logic.add_person_to_raid(): {str(e)}')
-        return (f'EXCEPTION: logic.add_person_to_raid(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.add_person_to_raid(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
 
 async def delete_person_from_raid(person_name: str, raid_id: int) -> tuple:
     try:
@@ -689,8 +707,9 @@ async def delete_person_from_raid(person_name: str, raid_id: int) -> tuple:
             helper.send_message_to_website(message)
             return (message, error)
     except Exception as e:
-        print(f'EXCEPTION: logic.delete_person_from_raid(): {str(e)}')
-        return (f'EXCEPTION: logic.delete_person_from_raid(): {str(e)}', e)
+        error_message = f'EXCEPTION: logic.delete_person_from_raid(): {str(e)}'
+        print(error_message)
+        return (error_message, error_message)
 
 async def award_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
     try:
@@ -716,7 +735,7 @@ async def award_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
     except Exception as e:
         error_message = f'EXCEPTION: logic.award_item(): {str(e)}'
         print(error_message)
-        return (error_message, e)
+        return (error_message, error_message)
     
 async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
     try:
@@ -747,7 +766,7 @@ async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
     except Exception as e:
         error_message = f'EXCEPTION: logic.remove_loot(): {e}'
         print(error_message)
-        return (error_message, e)
+        return (error_message, error_message)
 
 async def test_run_all_commands(discord_server: object, succeed):
     person_name = 'Grixus' if succeed else False

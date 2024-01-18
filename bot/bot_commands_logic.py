@@ -710,8 +710,8 @@ async def delete_person_from_raid(person_name: str, raid_id: int) -> tuple:
         error_message = f'EXCEPTION: logic.delete_person_from_raid(): {str(e)}'
         print(error_message)
         return (error_message, error_message)
-
-async def award_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
+# Very, very odd return statement, lets see if it works
+async def award_loot(item_name: str, person_name: str, raid_id: int, icon_id: int) -> tuple:
     try:
         error = None
         conn = bot.db_connection
@@ -731,7 +731,12 @@ async def award_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
             c.execute(f'''INSERT INTO person_loot{table_flag} (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (person_name, item_name, raid_id))
             c.execute(f'''INSERT INTO person_loot{table_flag}_backup (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (person_name, item_name, raid_id))
             conn.commit()
-            return (f'Item {item_name} awarded to {person_name} at {raid_name}', error)
+            print(f'Item {item_name} awarded to {person_name} at {raid_name}', error)
+            # helper.award_loot_embed returns list, we need to append it to 
+            results = helper.award_loot_embed(item_name, icon_id, person_name, raid_name)
+            results.append(error)
+            print(f'logic.award_loot() results: {results}')
+            return results
     except Exception as e:
         error_message = f'EXCEPTION: logic.award_item(): {str(e)}'
         print(error_message)
@@ -768,7 +773,7 @@ async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
         print(error_message)
         return (error_message, error_message)
 
-async def test_run_all_commands(discord_server: object, succeed):
+async def test_run_all_commands(discord_server: object, succeed: bool) -> list:
     person_name = 'Grixus' if succeed else False
     person_name_new = 'Grixus' if succeed else False
     relation = 'Friendly' if succeed else False
@@ -781,10 +786,10 @@ async def test_run_all_commands(discord_server: object, succeed):
     raid_name = 'Golems' if succeed else False
     raid_id = 1 if succeed else False
     item_name = 'Amulet of Necropotence' if succeed else False
-    # Initialize the results list with the header string
+    
     results = []
     exceptions = []
-    # Await each coroutine and append its first result to the results list
+
     try:
         add_person_result, add_person_exception = await add_person(person_name, relation, guild)
         results.append(add_person_result)

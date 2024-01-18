@@ -7,11 +7,13 @@ selected_raid_id = None
 
 # 'Test' that runs all slash commands, and expects the return 'exceptions' array to only contain None as every element.
 # This implies that no exceptions were thrown inside any of the slash commands.
-# This allows me to run all commands after adding a feature of refactoring, to help find bugs.
+# This allows me to run all commands after adding a feature, to help find bugs.
+# Technically only runs the commands inside the 'bot_commands_logic.py' module, which is not the same as manually running each command individually through
+# 'bot_bommands_interface.py', still very useful though.
 @app_commands.command(name='test_run_all_commands')
 async def test_run_all_commands(interaction: discord.Interaction):
     await interaction.response.defer()
-    results, exceptions = await logic.test_run_all_commands(interaction.guild, False)
+    results, exceptions = await logic.test_run_all_commands(interaction.guild, True)
     for result in results:
         if len(result) > 1994:
             await helper.print_large_message(interaction, result)
@@ -157,15 +159,16 @@ async def person_name_autocompletion(interaction: discord.Interaction, current: 
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.raid_name_autocompletion(interaction, current)
 
+# Need to return an embed here:
 @app_commands.command(name='award_loot')
 @app_commands.describe(item_name='Enter item_name', person_name='Enter person', raid_id='Enter raid ID')
 async def award_loot(interaction: discord.Interaction, item_name: str, person_name: str, raid_id: int):  
-    item_name_result = await helper.item_search(item_name)
+    item_name_result, icon_id = await helper.item_search(item_name)
     if not item_name_result:
         print(f'Item {item_name} not found.')
         return await interaction.response.send_message(f'Item {item_name} not found.')
-    results, exception = await logic.award_loot(item_name_result, person_name, raid_id)
-    await interaction.response.send_message(results)
+    results, image_file, exception = await logic.award_loot(item_name_result, person_name, raid_id, icon_id)
+    await interaction.response.send_message(file=image_file, embed=results)
 
 @award_loot.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):

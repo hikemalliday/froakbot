@@ -76,6 +76,18 @@ def add_character_embed(character_name: str, character_class: str, level: int, p
     embed.add_field(name='Person Name', value=person_name)
     return embed
 
+# Need to SELECT the item ID from the DB:
+def award_loot_embed(item_name: str, icon_id: int, person_name: str, raid_name: str) -> list:
+        embed = discord.Embed(title='/award_loot', description='Loot awarded:', color=discord.Color.random())
+        file_name = f'Item_{icon_id}.png'
+        file_path = f'./data/icons/{file_name}'
+        file = discord.File(file_path, filename=file_name)
+        embed.set_thumbnail(url=f'attachment://{file_name}')
+        embed.add_field(name='Item Name', value=item_name)
+        embed.add_field(name='Person Name', value=person_name)
+        embed.add_field(name='Raid ', value=raid_name)
+        return [embed, file]
+    
 async def get_most_populated_channel(guild):
     max_members = 0
     most_populated_channel = None
@@ -140,38 +152,43 @@ async def fetch_raider_names(person_name: str):
     except Exception as e:
         print('fetch_raider_names() error:', str(e))
         return str(e)
-    
-async def item_search(item_name: str) -> str:
+
+# Possibly refactor first condition to = instead of LIKE
+async def item_search(item_name: str) -> tuple:
+    error = None
     if item_name:
         try:
             db_functions.create_levenshtein_function(bot)
             c = bot.db_connection.cursor()
             # Attempt to find exact string match first:
-            c.execute('''SELECT * FROM items_master WHERE name LIKE ?''', (item_name,))
+            c.execute('''SELECT name, icon FROM items_master WHERE name LIKE ?''', (item_name,))
             results = c.fetchall()
-            if results and results[0][1]:
+            if results and results[0][0] and results[0][1]:
                 print('Exact string found:')
-                print(results[0][1])
+                item_name = results[0][0]
+                icon_id = results[0][1]
                 send_message_to_website(f'Item found: {results[0][1]}')
-                return results[0][1]
+                return (item_name, icon_id)
             else:
-                c.execute('''SELECT subquery.*
+                c.execute('''SELECT subquery.name, icon
                     FROM (
-                    SELECT * FROM items_master WHERE name LIKE ? || '%'
+                    SELECT name, icon FROM items_master WHERE name LIKE ? || '%'
                     ) AS subquery
                     WHERE levenshtein(subquery.name, ?) <= 20;''', (item_name, item_name))
                 results = c.fetchall()
                 print('Query results: ' + str(results))
-                if results and results[0][1]:
+                if results and results[0][0] and results[0][1]:
                     print('Levenshtein search:')
-                    print(results[0][1])
-                    send_message_to_website(f'Item found: {results[0][1]}' )
-                if results:
-                    return results[0][1]
+                    item_name = results[0][0]
+                    icon_id = results[0][1]
+                    send_message_to_website(f'Item found: {item_name}')
+                    return (item_name, icon_id)
                 else:
-                    return f'Couldnt find item: "{item_name}"'
+                    return (f'Couldnt find item: "{item_name}"', error)
         except Exception as e:
-            print('item_search() error:', str(e))
+            error_message = f'EXCEPTION: helper.item_search(): {str(e)}'
+            print(error_message)
+            return (error_message, error_message)
 
 async def print_large_message(interaction: object, result: str) -> str:
      for i in range(0, len(result), 1994):

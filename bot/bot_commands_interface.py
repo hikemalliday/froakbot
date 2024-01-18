@@ -5,7 +5,7 @@ from discord import app_commands
 import helper
 selected_raid_id = None
 
-# 'Test' that runs all slash commands, and expects the return 'exceptions' array to only contain None as every element.
+# 'Test' that runs all slash commands, and expects the returned 'exceptions' array to only contain None as every element.
 # This implies that no exceptions were thrown inside any of the slash commands.
 # This allows me to run all commands after adding a feature, to help find bugs.
 # Technically only runs the commands inside the 'bot_commands_logic.py' module, which is not the same as manually running each command individually through

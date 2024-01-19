@@ -711,7 +711,7 @@ async def delete_person_from_raid(person_name: str, raid_id: int) -> tuple:
         print(error_message)
         return (error_message, error_message)
 # Very, very odd return statement, lets see if it works
-async def award_loot(item_name: str, person_name: str, raid_id: int, icon_id: int) -> tuple:
+async def award_loot(item_name: str, person_name: str, raid_id: int, icon_id: int) -> list:
     try:
         error = None
         conn = bot.db_connection
@@ -742,7 +742,8 @@ async def award_loot(item_name: str, person_name: str, raid_id: int, icon_id: in
         print(error_message)
         return (error_message, error_message)
     
-async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
+# Do we have check to make sure item even exists at said raid / person?
+async def remove_loot(item_name: str, icon_id: int, person_name: str, raid_id: int) -> list:
     try:
         error = None
         conn = bot.db_connection
@@ -752,22 +753,25 @@ async def remove_loot(item_name: str, person_name: str, raid_id: int) -> tuple:
             result = c.fetchone()
             if not result:
                 return (f'Person {person_name} does not exist.', error)
-                
             c.execute(f'''SELECT raid_name FROM raid_master{table_flag} WHERE raid_id = ?''', (raid_id,))
             result = c.fetchone()
             if not result:
-                return (f'Raid ID: {raid_id} does not exist.', error)
-                
+                return (f'Raid ID: {raid_id} does not exist.', error)   
             raid_name = result[0]
+            # print(f'raid_name: {str(raid_name)}')
+            # print(f'item_name: {str(item_name)}')
+            # print(f'person_name: {str(person_name)}')
             c.execute(f'''SELECT * FROM person_loot{table_flag} WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
             results = c.fetchall()
             if not results:
                 return (f'ERROR: Item: {item_name} for person: {person_name} NOT FOUND at raid: {raid_name}', error)
-            
             c.execute(f'''DELETE FROM person_loot{table_flag} WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
             c.execute(f'''DELETE FROM person_loot{table_flag}_backup WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
             conn.commit()
-            return (f'Item {item_name} removed from {person_name} at {raid_name}.', error)
+            print(f'Item {item_name} removed from {person_name} at {raid_name}.')
+            results = helper.remove_loot_embed(item_name, icon_id, person_name, raid_name)
+            results.append(error)
+            return results
     except Exception as e:
         error_message = f'EXCEPTION: logic.remove_loot(): {e}'
         print(error_message)

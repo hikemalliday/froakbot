@@ -76,9 +76,21 @@ def add_character_embed(character_name: str, character_class: str, level: int, p
     embed.add_field(name='Person Name', value=person_name)
     return embed
 
-# Need to SELECT the item ID from the DB:
+
+# NOTE:Possibly add DATE:
 def award_loot_embed(item_name: str, icon_id: int, person_name: str, raid_name: str) -> list:
         embed = discord.Embed(title='/award_loot', description='Loot awarded:', color=discord.Color.random())
+        file_name = f'Item_{icon_id}.png'
+        file_path = f'./data/icons/{file_name}'
+        file = discord.File(file_path, filename=file_name)
+        embed.set_thumbnail(url=f'attachment://{file_name}')
+        embed.add_field(name='Item Name', value=item_name)
+        embed.add_field(name='Person Name', value=person_name)
+        embed.add_field(name='Raid ', value=raid_name)
+        return [embed, file]
+# NOTE:Possibly add DATE:
+def remove_loot_embed(item_name: str, icon_id: int, person_name: str, raid_name: str) -> list:
+        embed = discord.Embed(title='/remove_loot', description='Loot removed:', color=discord.Color.random())
         file_name = f'Item_{icon_id}.png'
         file_path = f'./data/icons/{file_name}'
         file = discord.File(file_path, filename=file_name)
@@ -154,6 +166,8 @@ async def fetch_raider_names(person_name: str):
         return str(e)
 
 # Possibly refactor first condition to = instead of LIKE
+# Possibly not the best practice for error handling, we are returning 'Couldnt find item' string , and searching substring at the caller level, perhaps try to return some sort of exception instead of string
+# ^^ Or, return empty string or None instead of 'Couldnt find item' string
 async def item_search(item_name: str) -> tuple:
     error = None
     if item_name:
@@ -176,7 +190,6 @@ async def item_search(item_name: str) -> tuple:
                     ) AS subquery
                     WHERE levenshtein(subquery.name, ?) <= 20;''', (item_name, item_name))
                 results = c.fetchall()
-                print('Query results: ' + str(results))
                 if results and results[0][0] and results[0][1]:
                     print('Levenshtein search:')
                     item_name = results[0][0]

@@ -33,8 +33,8 @@ async def test_run_all_commands(interaction: discord.Interaction):
     
     if all(exception is None for exception in exceptions):
         print('bot_commands_interface.run_all_commands:')
-        print('No exceptions found.')
-        await interaction.followup.send(f'bot_commands_interface.run_all_commands: No exceptions found.')
+        print('✅No exceptions found.')
+        await interaction.followup.send(f'✅bot_commands_interface.run_all_commands: No exceptions found.')
 
 @app_commands.command(name='add_person')
 @app_commands.describe(person_name='Enter a person name', relation='Enter relation status', guild='Enter a guild')
@@ -75,7 +75,7 @@ async def edit_person(interaction: discord.Interaction, person_name: str, person
 @app_commands.command(name='edit_character')
 @app_commands.describe(character_name='Enter a character name', character_name_new='Enter new character name', character_class='Enter a character class', level='Enter level', person_name='Enter a person name')
 async def edit_character(interaction: discord.Interaction, character_name: str, character_name_new: str, character_class: str, level: int, person_name: str):
-    results, error = await logic.edit_character(character_name, character_name_new, character_class, level, person_name)
+    results, exception = await logic.edit_character(character_name, character_name_new, character_class, level, person_name)
     await interaction.response.send_message(results)
 
 @app_commands.command(name='who')
@@ -121,10 +121,14 @@ async def parse_image(message: dict):
 @app_commands.describe(raid_name='Enter a raid name')
 async def add_raid_event(interaction: discord.Interaction, raid_name: str):
     if interaction.guild:
-        results, error = await logic.add_raid_event(interaction.guild, raid_name)
+        results, exception = await logic.add_raid_event(interaction.guild, raid_name)
+        if type(results) == str:
+            await interaction.response.send_message(results)
+        else:
+            await interaction.response.send_message(embed=results)
         await interaction.response.send_message(results)
     else:
-        await interaction.response.send_message("Error (add_raid): no guild passed.")
+        await interaction.response.send_message("❌ERROR interface.add_raid_event(): no discord_server passed.")
 
 @app_commands.command(name='add_person_to_raid')
 @app_commands.describe(person_name='Enter person', raid_id='Enter raid id')
@@ -132,13 +136,13 @@ async def add_person_to_raid(interaction: discord.Interaction, person_name: str,
     results, exception = await logic.add_person_to_raid(person_name, raid_id)
     await interaction.response.send_message(results)
 
-@add_person_to_raid.autocomplete('raid_id')
-async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
-    return await helper.raid_name_autocompletion(interaction, current)
-
 @add_person_to_raid.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.person_name_autocompletion(interaction, current)
+
+@add_person_to_raid.autocomplete('raid_id')
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
+    return await helper.raid_name_autocompletion(interaction, current, None)
 
 @app_commands.command(name='delete_raid_event')
 @app_commands.describe(raid_id='Enter raid id')
@@ -148,60 +152,98 @@ async def delete_raid_event(interaction: discord.Interaction, raid_id: int):
    
 @delete_raid_event.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
-    return await helper.raid_name_autocompletion(interaction, current)
+    return await helper.raid_name_autocompletion(interaction, current, None)
 
+# NOTE: Need to refactor , similar to /award_loot
 @app_commands.command(name='delete_person_from_raid')
 @app_commands.describe(raid_id='Enter raid id', person_name='Enter person')
-async def delete_person_from_raid(interaction: discord.Interaction, person_name: str, raid_id: int):  
-    results, exception = await logic.delete_person_from_raid(person_name, raid_id)
-    await interaction.response.send_message(results)
+async def delete_person_from_raid(interaction: discord.Interaction, person_name: str, raid_id: int):
+    try:
+        user_id = interaction.user.id
+        results, exception = await logic.delete_person_from_raid(person_name, raid_id)
+        await interaction.response.send_message(results)
+    finally:
+        if user_id in current_inputs:
+            current_inputs[user_id] = {}
 
 @delete_person_from_raid.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    user_id = interaction.user.id
+    if user_id not in current_inputs:
+        current_inputs[user_id] = {}
+    
+    current_inputs[user_id]['person_name'] = current
     return await helper.person_name_autocompletion(interaction, current)
 
 @delete_person_from_raid.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
-    return await helper.raid_name_autocompletion(interaction, current)
+    user_id = interaction.user.id
+    person_name = current_inputs[user_id]['person_name']
+    return await helper.raid_name_autocompletion(interaction, current, person_name)
 
 # Need to return an embed here:
 @app_commands.command(name='award_loot')
 @app_commands.describe(item_name='Enter item_name', person_name='Enter person', raid_id='Enter raid ID')
-async def award_loot(interaction: discord.Interaction, item_name: str, person_name: str, raid_id: int):  
-    item_name_result, icon_id = await helper.item_search(item_name)
-    if 'Couldnt find item:' in item_name_result:
-        return await interaction.response.send_message(f'Item {item_name} not found.')
-    results, image_file, exception = await logic.award_loot(item_name_result, person_name, raid_id, icon_id)
-    await interaction.response.send_message(file=image_file, embed=results)
-
+async def award_loot(interaction: discord.Interaction, item_name: str, person_name: str, raid_id: int):
+    try:
+        user_id = interaction.user.id
+        item_name_result, icon_id = await helper.item_search(item_name)
+        if 'Couldnt find item:' in item_name_result:
+            return await interaction.response.send_message(f'❌ERROR: Item {item_name} not found.')
+        results, image_file, exception = await logic.award_loot(item_name_result, person_name, raid_id, icon_id)
+        await interaction.response.send_message(file=image_file, embed=results)
+    finally:
+        if user_id in current_inputs:
+            current_inputs[user_id] = {}
+        
 @award_loot.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
-    return await helper.person_name_autocompletion(interaction, current)
+        user_id = interaction.user.id
+        if user_id not in current_inputs:
+            current_inputs[user_id] = {}
 
+        current_inputs[user_id]['person_name'] = current
+        return await helper.person_name_autocompletion(interaction, current)
+    
 @award_loot.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
-    return await helper.raid_name_autocompletion(interaction, current)
+    # Perhaps pass in 'current_inputs[user_id]['person_name']'
+    user_id = interaction.user.id
+    person_name = current_inputs[user_id]['person_name']
+    return await helper.raid_name_autocompletion(interaction, current, person_name)
 
 # Refactor:
 # Need to somehow pass in inputs to other input fields before command is even submitted
 @app_commands.command(name='remove_loot')
 @app_commands.describe(item_name='Enter item_name', person_name='Enter person', raid_id='Enter raid ID')
 async def remove_loot(interaction: discord.Interaction, item_name: str, person_name: str, raid_id: int):  
-    item_name_results = await helper.item_search(item_name)
-    if not item_name_results:
-        print(f'Item {item_name} not found.')
-        return await interaction.response.send_message(f'Item {item_name} not found.')
-    item_name, icon_id = item_name_results
-    results, image_file, exception = await logic.remove_loot(item_name, icon_id, person_name, raid_id)
-    await interaction.response.send_message(file=image_file, embed=results)
+    try:
+        user_id = interaction.user.id
+        item_name_result, icon_id = await helper.item_search(item_name)
+        if 'Couldnt find item:' in item_name_result:
+            return await interaction.response.send_message(f'❌ERROR: Item {item_name} not found.')
+        results, image_file, exception = await logic.remove_loot(item_name, icon_id, person_name, raid_id)
+        if 'ERROR: Item:' in results:
+            await interaction.response.send_message(results)
+        await interaction.response.send_message(file=image_file, embed=results)
+    finally:
+        if user_id in current_inputs:
+            current_inputs[user_id] = {}
 
 @remove_loot.autocomplete('person_name')
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    user_id = interaction.user.id
+    if user_id not in current_inputs:
+        current_inputs[user_id] = {}
+    
+    current_inputs[user_id]['person_name'] = current
     return await helper.person_name_autocompletion(interaction, current)
 
 @remove_loot.autocomplete('raid_id')
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
-    return await helper.raid_name_autocompletion(interaction, current)
+    user_id = interaction.user.id
+    person_name = current_inputs[user_id]['person_name']
+    return await helper.raid_name_autocompletion(interaction, current, person_name)
 
 @app_commands.command(name='register_person')
 @app_commands.describe(person_name='Enter person')

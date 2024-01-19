@@ -9,12 +9,15 @@ import db_functions
 db_path = env('DB_PATH')
 url = env('URL')
 
-async def raid_name_autocompletion(interaction: discord.Interaction, current: str):
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str, person_name: str):
     print('helper.raid_name_autocompletion() 1')
-    raid_names = await fetch_raid_names(current)
+    # CAn we pass person name here?
+    # We need to check all callers first
+    print(f'helper.raid_name_autocompletion.person_name: {person_name}')
+    raid_names = await fetch_raid_names(current, person_name)
+    print('helper.raid_name_autocompletion() 2')
     if raid_names is None:
         return ['No raids of that name found.']
-    print('helper.raid_name_autocompletion() 2')
     choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
     return choices
 
@@ -76,7 +79,6 @@ def add_character_embed(character_name: str, character_class: str, level: int, p
     embed.add_field(name='Person Name', value=person_name)
     return embed
 
-
 # NOTE:Possibly add DATE:
 def award_loot_embed(item_name: str, icon_id: int, person_name: str, raid_name: str) -> list:
         embed = discord.Embed(title='/award_loot', description='Loot awarded:', color=discord.Color.random())
@@ -99,7 +101,15 @@ def remove_loot_embed(item_name: str, icon_id: int, person_name: str, raid_name:
         embed.add_field(name='Person Name', value=person_name)
         embed.add_field(name='Raid ', value=raid_name)
         return [embed, file]
-    
+
+def add_raid_embed(raid_name: str):
+    embed = discord.Embed(title='/add_raid_event', description='Character successfully added:', color=discord.Color.random())
+    embed.set_thumbnail(url=f'{config.froak_icon}')
+    embed.add_field(name='Raid Name', value=raid_name)
+    embed.add_field(name='Date', value=datetime.now().strftime("%m-%d-%Y"))
+    return embed
+      
+
 async def get_most_populated_channel(guild):
     max_members = 0
     most_populated_channel = None
@@ -120,26 +130,44 @@ async def get_most_populated_channel(guild):
         print("There are no members in any voice channels.")
         return None
     
-async def fetch_raid_names(raid_name: str):
-    print('helper.fetch_raid_names() start')
+#NOTE: Unsure if error handling is correct
+async def fetch_raid_names(raid_name: str, person_name: str = None):
     try:
-        like_pattern = f'{raid_name}%'
+        raid_name = f'{raid_name}%'
         c = bot.db_connection.cursor()
-        print('helper.fetch_raid_names() 1')
-        c.execute('''SELECT * FROM raid_master_test WHERE raid_name LIKE ?''', (like_pattern,))
-        bot.db_connection.commit()
-        results = c.fetchall()
-        print('helper.fetch_raid_names() 2')
-        if results:
-            print('helper.fetch_raid_names() 3')
-            results = [result for result in results]
-            return results
+        if person_name:
+            person_name = f'{person_name}%'
+            print('helper.fetch_raid_names() person_name NOT NULL:')
+            print(f'helper.fetch_raid_names() person_name LIKE var: {person_name}')
+            c.execute('''SELECT * FROM raid_master_test a
+                         INNER JOIN dkp_test b ON a.raid_id = b.raid_id
+                         WHERE a.raid_name LIKE ? AND b.person_name LIKE ?''', (raid_name, person_name,))
+            bot.db_connection.commit()
+            results = c.fetchall()
+            print('helper.fetch_raid_names() 2')
+            print(f'helper.fetch_raid_names() results: {results}')
+            if results:
+                print('helper.fetch_raid_names() 3')
+                results = [result for result in results]
+                return results
+            else:
+                print('No results found (helper.fetch_raid_names)')
+                return None
         else:
-            print('helper.fetch_raid_names() 4')
-            print('No results found (fetch_raid_names)')
-            return None
+            print('helper.fetch_raid_names() person_name IS NULL:')
+            c.execute('''SELECT * FROM raid_master_test WHERE raid_name LIKE ?''', (raid_name,))
+            bot.db_connection.commit()
+            results = c.fetchall()
+            if results:
+                
+                results = [result for result in results]
+                return results
+            else:
+                print('No results found (fetch_raid_names)')
+                return None
+    #NOTE: Why are we returning None instead of exception?
     except Exception as e:
-        print('fetch_raid_names() error:', str(e))
+        print('EXCEPTION: helper.fetch_raid_names()', str(e))
         return None
 
 async def fetch_raider_names(person_name: str):

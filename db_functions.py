@@ -3,7 +3,7 @@ import mysql.connector
 from decouple import config as env
 from datetime import datetime
  
-# The term 'test' in this module does not imply tradional unit or end to end tests, its for creating test tables that I can read / write
+# The term 'test' in this module does not imply traditional unit or end to end tests, its for creating test tables that I can read / write
 
 
 def levenshtein_distance(string1, string2):
@@ -43,7 +43,7 @@ def create_virtual_table(bot: object):
     except Exception as e:
         print('Error creating virtual table:', e)
 
-# Created from the Proect Quarm items database.
+# Created from the Project Quarm items database.
 def create_items_master_table(bot: object):
     try:
         c1 = bot.db_connection.cursor()

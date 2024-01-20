@@ -1,7 +1,7 @@
 # V2 (clas commands API)
 from data.char_classes import class_names, emojis
 from decouple import config as env
-from data.config import table_flag, test_mode 
+from data.config import table_flag, test_mode, tesseract
 import pytesseract
 import helper
 from datetime import datetime
@@ -12,7 +12,7 @@ from bot.bot_instance import bot
 
 db_path = env('DB_PATH')
 url = env('URL')
-pytesseract.pytesseract.tesseract_cmd = r'./Tesseract-OCR/tesseract'
+pytesseract.pytesseract.tesseract_cmd = tesseract
 
 
 async def add_person(person_name: str, relation: str, guild: str) -> tuple:

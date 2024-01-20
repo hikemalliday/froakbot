@@ -9,26 +9,21 @@ import db_functions
 db_path = env('DB_PATH')
 url = env('URL')
 
-async def raid_name_autocompletion(interaction: discord.Interaction, current: str, person_name: str):
-    print('helper.raid_name_autocompletion() 1')
-    # CAn we pass person name here?
-    # We need to check all callers first
-    print(f'helper.raid_name_autocompletion.person_name: {person_name}')
+async def raid_name_autocompletion(interaction: discord.Interaction, current: str, person_name: str) -> list:
     raid_names = await fetch_raid_names(current, person_name)
-    print('helper.raid_name_autocompletion() 2')
     if raid_names is None:
         return ['No raids of that name found.']
     choices = [discord.app_commands.Choice(name=str(name).replace('(','').replace(')',''), value=int(name[0])) for name in raid_names]
     return choices
 
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
-    print('helper.person_name_autocompletion() 1')
     person_names = await fetch_raider_names(current)
     if person_names is None:
-        return ['helper.add_person_to_raid.person_name_autocompletion() error.']
+        return ['ERROR: helper.add_person_to_raid.person_name_autocompletion(): no names found.']
     choices = [discord.app_commands.Choice(name=name, value=name) for name in person_names]
     return choices
 
+# NOTE: Disabled temporarily
 def send_message_to_website(message: dict=None, image_url=None):
     return
     payload = {'date': str(datetime.now().strftime("%m-%d-%Y")), 
@@ -108,8 +103,8 @@ def add_raid_embed(raid_name: str):
     embed.add_field(name='Raid Name', value=raid_name)
     embed.add_field(name='Date', value=datetime.now().strftime("%m-%d-%Y"))
     return embed
-      
 
+# Refactor 'most_populated_channel' to list, and allow user to pick
 async def get_most_populated_channel(guild):
     max_members = 0
     most_populated_channel = None

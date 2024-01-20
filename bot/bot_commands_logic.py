@@ -768,6 +768,7 @@ async def remove_loot(item_name: str, icon_id: int, person_name: str, raid_id: i
         print(error_message)
         return (error_message, None, error_message)
 
+# Some commands are returning more values than expected, need to investigate
 async def test_run_all_commands(discord_server: object, succeed: bool) -> list:
     person_name = 'Grixus' if succeed else False
     person_name_new = 'Grixus' if succeed else False
@@ -825,12 +826,12 @@ async def test_run_all_commands(discord_server: object, succeed: bool) -> list:
         add_person_to_raid_result, add_person_to_raid_exception = await add_person_to_raid(person_name, raid_id)
         results.append(add_person_to_raid_result)
         exceptions.append(add_person_to_raid_exception)
-        
-        award_loot_result, award_loot_exception = await award_loot(item_name, person_name, raid_id)
+        # NOTE: Have to pass in mock 'file' var, to accept the 3rd value returned, even tho its irrelevant otherwise for the test
+        award_loot_result, file, award_loot_exception = await award_loot(item_name, person_name, raid_id, 800)
         results.append(award_loot_result)
         exceptions.append(award_loot_exception)
 
-        remove_loot_result, remove_loot_exception = await remove_loot(item_name, person_name, raid_id)
+        remove_loot_result, file, remove_loot_exception = await remove_loot(item_name, 800, person_name, raid_id)
         results.append(remove_loot_result)
         exceptions.append(remove_loot_exception)
 
@@ -864,7 +865,7 @@ async def test_run_all_commands(discord_server: object, succeed: bool) -> list:
         return results, exceptions
     except Exception as e:
         print(f'logic.test_run_all_commands() exception: {str(e)}',)
-        return ((f'logic.test_run_all_commands() exception: {str(e)}', e))
+        return (([f'logic.test_run_all_commands() exception: {str(e)}'], [e]))
         
 
 

@@ -768,7 +768,7 @@ async def remove_loot(item_name: str, icon_id: int, person_name: str, raid_id: i
         print(error_message)
         return (error_message, None, error_message)
 
-# Some commands are returning more values than expected, need to investigate
+#NOTE: Refactor more Exception wrappers for each function call.
 async def test_run_all_commands(discord_server: object, succeed: bool) -> list:
     person_name = 'Grixus' if succeed else False
     person_name_new = 'Grixus' if succeed else False

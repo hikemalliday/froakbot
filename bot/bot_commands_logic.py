@@ -610,7 +610,7 @@ async def add_raid_event(discord_server: object, raid_name: str) -> tuple:
         timestamp = datetime.now().strftime("%m-%d-%Y")
         raiders = await helper.get_most_populated_channel(discord_server)
         if raiders is None:
-            return ('❌ERROR: There are no members in any voice channels.', exception)
+            return ('❌ERROR: There are no members in any voice channels.', None)
         
         conn = bot.db_connection
         with conn:

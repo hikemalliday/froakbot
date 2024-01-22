@@ -423,14 +423,19 @@ def backup_database(bot: object):
             results = c.fetchall()
             if results:
                 c.executemany('''INSERT INTO dkp_backup (username, raid_id, dkp_points) VALUES (?, ?, ?)''', results)
+            else:
+                print(f'SELECT FROM dkp failed, please revert to backup DB file and try again.')
             c.execute('''SELECT person_name, item_name, raid_id  FROM person_loot''') 
             results = c.fetchall()
             if results:
                 c.executemany('''INSERT INTO person_loot_backup (person_name, item_name, raid_id) VALUES (?, ?, ?)''', results)
+            else:
+                print(f'SELECT FROM person_loot failed, please revert to backup DB file and try again.')
             c.execute('''SELECT raid_name, raid_date FROM raid_master''')
             results = c.fetchall()
             if results:
                 c.executemany('''INSERT INTO raid_master_backup VALUES (?, ?)''', results)
+            print(f'SELECT FROM raid_master failed, please rever to backup DB file and try again.')
             c.execute('''INSERT INTO backup_timestamp (date) VALUES (?)''', (datetime.now().strftime("%m-%d-%Y"),) )
             conn.commit()
         print('Database backup complete.')

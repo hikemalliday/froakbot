@@ -435,7 +435,8 @@ def backup_database(bot: object):
             results = c.fetchall()
             if results:
                 c.executemany('''INSERT INTO raid_master_backup VALUES (?, ?)''', results)
-            print(f'SELECT FROM raid_master failed, please rever to backup DB file and try again.')
+            else:
+                print(f'SELECT FROM raid_master failed, please rever to backup DB file and try again.')
             c.execute('''INSERT INTO backup_timestamp (date) VALUES (?)''', (datetime.now().strftime("%m-%d-%Y"),) )
             conn.commit()
         print('Database backup complete.')

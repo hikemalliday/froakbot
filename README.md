@@ -26,6 +26,10 @@ Also contains basic CRUD commands for search of character data.
 
 # Dev Notes:
 
+I create a database backup function. This function is located at db_functions.py. I intend to use this product longterm, so I am trying to make it as robust as possible.
+
+The function first calls a helper function which attempts to create a copy/paste of the .db file, with an autoincrement naming scheme. If True is returned, the rest of the function can proceed. Else, we terminate the function call on the spot. It is important that we have this safeguard in place, because following this copy/paste, we call some DROPS and CREATES, which to my knowledge cannot be included in transactions, because CREATES and DROPS are committed on the spot. The rest of the following SELECTS and INSERTS are warpped in a transaction. The purpose of these SELECTS and INSERTS is to store data in tables with suffix '_backup'. There is also a timestamp saved in table 'backup_timestamp', which holds the datetime of the backup tables. I will begin the 'revert_t0_backup()' function tomorrow.
+
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
 
 I created 'items_master' by copying a few columns from the Project Quarm items table, so that when awarding raid loot, when you input the item_name string, if spelled close enough, it will enter the correct spelling of the item into the database. This allows for standardized data that is more queryable. 'items_master' also contains a column called 'icon', which is a number that maps an item's in game image to an image file. I scraped all of the item image files from the P99 wiki, using my own [webscraper](https://github.com/hikemalliday/p99wiki-scraper), and the images are correctly mapped with the correct ID's. This will allow me to returnn a nice looking 'card' in Discord that will show a picture of the item when loot is awarded. 

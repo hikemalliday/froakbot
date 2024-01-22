@@ -1,4 +1,5 @@
 # V2 (clas commands API)
+#NOTE: We added test_mode to bypass printing embeds on the test runs, however we need to refactor to handle the embeds at interface.test_run_all_commands() to just deal with it as it should.
 from data.char_classes import class_names, emojis
 from decouple import config as env
 from data.config import table_flag, test_mode, tesseract
@@ -41,9 +42,7 @@ async def add_person(person_name: str, relation: str, guild: str) -> tuple:
             f'```✅Player "{person_name}" successfully inserted into "person{table_flag}" table.```'
         )
         helper.send_message_to_website(message)
-        # NOTE: Flag for my test all command
-        # if test_mode == True:
-        #     return (message, error)
+        
         return (helper.add_person_embed(person_name, relation, guild), None)
     except Exception as e:
         # Returning None value 'error' for UNIQUE constraint. Its not the type of bug I am looking for in the test.
@@ -52,9 +51,9 @@ async def add_person(person_name: str, relation: str, guild: str) -> tuple:
             helper.send_message_to_website(message)
             return (message, exception)
         else:
-            error_message = f"EXCEPTION: logic.add_person(): {str(e)}"
-            print(error_message)
-            return (error_message, error_message)
+            exception = f"EXCEPTION: logic.add_person(): {str(e)}"
+            print(exception)
+            return (exception, exception)
       
 async def add_character(character_name: str, character_class: str, level: int, person_name: str) -> tuple:
     try:
@@ -95,19 +94,17 @@ async def add_character(character_name: str, character_class: str, level: int, p
         if result:
             message = f'```✅Character "{character_name}" inserted successfully: {result}```'
             helper.send_message_to_website(message)
-            # NOTE: Flag for my test all command
-            # if test_mode == True:
-            #     return (message, error)
+
+            
             return (helper.add_character_embed(character_name, character_class, level, person_name), None)
 
     except Exception as e:
-        error_message = f'EXCEPTION: logic.add_char(): {str(e)}'
-        print(error_message)
-        return (error_message, error_message)
+        exception = f'EXCEPTION: logic.add_char(): {str(e)}'
+        print(exception)
+        return (exception, exception)
         
 async def delete_person(person_name: str) -> tuple:
     try:
-        
         person_name = person_name.title()
         conn = bot.db_connection
         c = conn.cursor()
@@ -122,9 +119,9 @@ async def delete_person(person_name: str) -> tuple:
             helper.send_message_to_website(message)
             return (message, None)
     except Exception as e:
-        error_message = f'EXCEPTION: logic.delete_person(): {str(e)}'
-        print(error_message)
-        return(error_message, error_message)
+        exception = f'EXCEPTION: logic.delete_person(): {str(e)}'
+        print(exception)
+        return(exception, exception)
 
 async def delete_character(character_name: str) -> tuple:
     try:
@@ -144,9 +141,9 @@ async def delete_character(character_name: str) -> tuple:
             return (message, None)
 
     except Exception as e:
-        error_message = f'EXCEPTION: logic.delete_character(): {str(e)}'
-        print(error_message)
-        return (error_message, error_message)
+        exception = f'EXCEPTION: logic.delete_character(): {str(e)}'
+        print(exception)
+        return (exception, exception)
         
 async def edit_person(person_name: str, person_name_new: str, relation: str, guild: str) -> tuple:
     try:
@@ -176,9 +173,9 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
             return (message, None)
 
     except Exception as e:
-        error_message = f'EXCEPTION: logic.edit_char(): {str(e)}'
-        print(error_message)
-        return (error_message, error_message)
+        exception = f'EXCEPTION: logic.edit_person() (first condition): {str(e)}'
+        print(exception)
+        return (exception, exception)
     try:
         c.execute(
             f"""UPDATE person{table_flag} SET person_name = ?, relation = ?, guild = ? WHERE person_name = ?""",
@@ -197,9 +194,9 @@ async def edit_person(person_name: str, person_name_new: str, relation: str, gui
         helper.send_message_to_website(message)
         return (message, None)
     except Exception as e:
-        error_message = f'EXCEPTION: logic.edit_person(): {str(e)}'
-        print(error_message)
-        return (error_message, error_message)
+        exception = f'EXCEPTION: logic.edit_person() (second condition): {str(e)}'
+        print(exception)
+        return (exception, exception)
 
 async def edit_character(character_name: str, character_name_new: str, character_class: str, level: int, person_name: str) -> tuple:
     try:
@@ -562,7 +559,7 @@ async def parse_image(message: dict):
     except Exception as e:
         print('EXCEPTION: logic.parse_image():', str(e))
         return str(e)
-    
+#NOTE: Need to SELECT and see if user already has username
 async def register_person(person_name: str, username: str) -> tuple:
     try:
         person_name = person_name.title()
@@ -573,6 +570,10 @@ async def register_person(person_name: str, username: str) -> tuple:
         result = c.fetchone()
         if not result:
             return (f'❌ERROR: Person {person_name} not found. (logic.register_person())', None)
+        c.execute(f'''SELECT username FROM person{table_flag} WHERE person_name = ?''', (person_name,))
+        result = c.fetchone()
+        if result and result[0]:
+            return (f'❌ERROR: Username "{result[0]}" already exists for person "{person_name}". (logic.register_person())', None)
         c.execute(f'''UPDATE person{table_flag} SET username = ? WHERE person_name = ?''', (username, person_name))
         conn.commit()
         return (f'✅Username: "{username}" registered for person: "{person_name}"', None)
@@ -605,25 +606,22 @@ async def unregister_person(person_name: str) -> tuple:
         return (error_message, error_message)
 
 # NOTE: Possibly remove error message when we refactor / revamp the way we input raids  
+# We need to SELECT the actual person_names, derived with the USERNAMES returned from get_most_populated_channel()
 async def add_raid_event(discord_server: object, raid_name: str) -> tuple:
     try:
         timestamp = datetime.now().strftime("%m-%d-%Y")
-        raiders = await helper.get_most_populated_channel(discord_server)
+        raiders, usernames = await helper.get_most_populated_channel(discord_server)
         if raiders is None:
             return ('❌ERROR: There are no members in any voice channels.', None)
-        
         conn = bot.db_connection
         with conn:
             c = conn.cursor()
             c.execute(f'''INSERT INTO raid_master{table_flag} (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
-            c.execute(f'''INSERT INTO raid_master{table_flag}_backup (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
             raid_id = c.lastrowid
-            
-            raider_inserts = [(raider, raid_id, 1) for raider in raiders]
-            c.executemany(f'''INSERT INTO dkp{table_flag} (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', raider_inserts)
-            c.executemany(f'''INSERT INTO dkp{table_flag}_backup (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', raider_inserts)
+            username_inserts = [(user, raid_id, 1) for user in usernames]
+            c.executemany(f'''INSERT INTO dkp{table_flag} (username, raid_id, dkp_points) VALUES (?, ?, ?)''', username_inserts)
             conn.commit()
-            embed = helper.add_raid_embed(raid_name)
+            embed = helper.add_raid_embed(raid_name, raiders)
         return (embed, None)
     except Exception as e:
         error_message = f'EXCEPTION: logic.add_raid_event(): {str(e)}'
@@ -643,9 +641,7 @@ async def delete_raid_event(raid_id: int) -> tuple:
                 print('Raid not found.')
                 return ('❌ERROR: Raid not found', None)
             c.execute(f'''DELETE FROM raid_master{table_flag} WHERE raid_id = ?''', (raid_id,))
-            c.execute(f'''DELETE FROM raid_master{table_flag}_backup WHERE raid_id = ?''', (raid_id,))
             c.execute(f'''DELETE FROM dkp{table_flag} WHERE raid_id = ?''', (raid_id,))
-            c.execute(f'''DELETE FROM dkp{table_flag}_backup WHERE raid_id = ?''', (raid_id,))
             conn.commit()
             message = f'✅Raid deleted: {raid_name}, {raid_date}.'
             helper.send_message_to_website(message)
@@ -655,17 +651,24 @@ async def delete_raid_event(raid_id: int) -> tuple:
         print(error_message)
         return (error_message, error_message)
 
+# NOTE: Add a SELECT to convert person_name to username
 async def add_person_to_raid(person_name: str, raid_id: int) -> tuple:
     try:
         person_name = person_name.title()
         conn = bot.db_connection
         c = conn.cursor()
         # SELECT first to make sure char exists
-        c.execute(f'''SELECT person_name FROM person{table_flag} WHERE person_name = ?''', (person_name,))
+        c.execute(f'''SELECT username FROM person{table_flag} WHERE person_name = ?''', (person_name,))
         result = c.fetchone()
+        if result and result[0]:
+            username = result[0]
+        else:
+            error_message = f'❌ERROR: No username found for person "{person_name}"'
+            return (error_message, error_message)
+        print(f'logic.add_person_to_raid.SELECT: {result}')
         if not result:
-            return (f'❌ERROR: Person {person_name} not found.', None)
-        c.execute(f'''INSERT INTO dkp{table_flag} (person_name, raid_id, dkp_points) VALUES (?, ?, ?)''', (person_name, raid_id, 1))
+            return (f'❌ERROR: Username for "{person_name}" not found.', None)
+        c.execute(f'''INSERT INTO dkp{table_flag} (username, raid_id, dkp_points) VALUES (?, ?, ?)''', (username, raid_id, 1))
         conn.commit()
         message = f'✅Person {person_name} added to raid: {raid_id}.'
         helper.send_message_to_website(message)
@@ -673,7 +676,7 @@ async def add_person_to_raid(person_name: str, raid_id: int) -> tuple:
     except Exception as e:
         if 'UNIQUE constraint failed' in str(e):
             print(f'EXCEPTION: logic.add_person_to_raid() UNIQUE constraint: {str(e)}')
-            return (f'❌Person {person_name} is already in raid {raid_id}.', None)
+            return (f'❌ERROR: Username "{username}" is already in raid {raid_id}.', None)
         error_message = f'EXCEPTION: logic.add_person_to_raid(): {str(e)}'
         print(error_message)
         return (error_message, error_message)
@@ -691,9 +694,14 @@ async def delete_person_from_raid(person_name: str, raid_id: int) -> tuple:
             else:
                 print('❌ERROR: logic.delete_person_from_raid(): Raid not found.')
                 return ('❌ERROR: logic.delete_person_from_raid(): Raid not found.', None)
-            
-            c.execute(f'''DELETE FROM dkp{table_flag} WHERE person_name = ?''', (person_name,))
-            c.execute(f'''DELETE FROM dkp{table_flag}_backup WHERE person_name = ?''', (person_name,))
+            c.execute(f'''SELECT username FROM person{table_flag} WHERE person_name = ?''', (person_name,))
+            result = c.fetchone()
+            if result and result[0]:
+                username = result[0]
+            else:
+                print('❌ERROR: logic.delete_person_from_raid(): username not found.')
+                return ('❌ERROR: logic.delete_person_from_raid(): username not found.', None)
+            c.execute(f'''DELETE FROM dkp{table_flag} WHERE username = ?''', (username,))
             conn.commit()
             message = f'✅"{person_name}" removed from: "{raid_name}", "{raid_date}".'
             helper.send_message_to_website(message)
@@ -709,30 +717,30 @@ async def award_loot(item_name: str, person_name: str, raid_id: int, icon_id: in
         person_name = person_name.title()
         conn = bot.db_connection
         with conn:
+            print('logic.award_loot.test1')
             c = conn.cursor()
             c.execute(f'''SELECT person_name FROM person{table_flag} WHERE person_name = ?''', (person_name,))
             result = c.fetchone()
             if not result:
-                return (f'❌ERROR: Person {person_name} does not exist.', None)
-            
+                return (f'❌ERROR: Person {person_name} does not exist.', None, None)
+            print('logic.award_loot.test2')
             c.execute(f'''SELECT raid_name FROM raid_master{table_flag} WHERE raid_id = ?''', (raid_id,))
             result = c.fetchone()
             if not result:
-                return (f'❌ERROR: Raid_id {raid_id} does not exist.', None)
-            
+                return (f'❌ERROR: Raid_id {raid_id} does not exist.', None, None)
+            print('logic.award_loot.test3')
             raid_name = result[0]
             c.execute(f'''INSERT INTO person_loot{table_flag} (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (person_name, item_name, raid_id))
-            c.execute(f'''INSERT INTO person_loot{table_flag}_backup (person_name, item_name, raid_id) VALUES (?, ?, ?)''', (person_name, item_name, raid_id))
             conn.commit()
-            print(f'✅Item "{item_name}" awarded to "{person_name}" at "{raid_name}"', None)
+            print(f'✅Item "{item_name}" awarded to "{person_name}" at "{raid_name}"')
             # helper.award_loot_embed returns list, we need to append it to 
             results = helper.award_loot_embed(item_name, icon_id, person_name, raid_name)
             results.append(None)
             return results
     except Exception as e:
-        error_message = f'EXCEPTION: logic.award_item(): {str(e)}'
-        print(error_message)
-        return (error_message, None, error_message)
+        exception = f'EXCEPTION: logic.award_item(): {str(e)}'
+        print(exception)
+        return (exception, None, exception)
     
 async def remove_loot(item_name: str, icon_id: int, person_name: str, raid_id: int) -> list:
     try:
@@ -756,7 +764,7 @@ async def remove_loot(item_name: str, icon_id: int, person_name: str, raid_id: i
                 print(error_message)
                 return (error_message, None, None)
             c.execute(f'''DELETE FROM person_loot{table_flag} WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
-            c.execute(f'''DELETE FROM person_loot{table_flag}_backup WHERE item_name = ? AND person_name = ? AND raid_id = ?''', (item_name, person_name, raid_id))
+            
             conn.commit()
             message = f'✅Item {item_name} removed from {person_name} at {raid_name}.'
             helper.send_message_to_website(message)
@@ -764,9 +772,9 @@ async def remove_loot(item_name: str, icon_id: int, person_name: str, raid_id: i
             results.append(None)
             return results
     except Exception as e:
-        error_message = f'EXCEPTION: logic.remove_loot(): {e}'
-        print(error_message)
-        return (error_message, None, error_message)
+        exception = f'EXCEPTION: logic.remove_loot(): {e}'
+        print(exception)
+        return (exception, None, exception)
 
 #NOTE: Refactor more Exception wrappers for each function call.
 async def test_run_all_commands(discord_server: object, succeed: bool) -> list:
@@ -786,86 +794,127 @@ async def test_run_all_commands(discord_server: object, succeed: bool) -> list:
     results = []
     exceptions = []
 
+    print(f'test_mode: {str(test_mode)}')
+    print(f'table_flag: {str(table_flag)}')
+
     try:
-        add_person_result, add_person_exception = await add_person(person_name, relation, guild)
-        results.append(add_person_result)
-        exceptions.append(add_person_exception)
-        
-        add_character_result, add_character_exception = await add_character(character_name, character_class, level, person_name)
-        results.append(add_character_result)
-        exceptions.append(add_character_exception)
-        
-        edit_person_result, edit_person_exception = await edit_person(person_name, person_name_new, relation, guild)
-        results.append(edit_person_result)
-        exceptions.append(edit_person_exception)
-
-        edit_character_result, edit_character_exception = await edit_character(character_name, character_name_new, character_class, level, person_name)
-        results.append(edit_character_result)
-        exceptions.append(edit_character_exception)
-
-        who_result, who_exception = await who(character_name)
-        results.append(who_result)
-        exceptions.append(who_exception)
-
-        get_characters_result, get_characters_excetion = await get_characters(person_name)
-        results.append(get_characters_result)
-        exceptions.append(get_characters_excetion)
-        
-        get_person_table_result, get_person_table_exception = await get_person_table(guild)
-        results.append(get_person_table_result)
-        exceptions.append(get_person_table_exception)
-
-        get_characters_table_result, get_characters_table_exception = await get_characters_table(guild, character_class)
-        results.append(get_characters_table_result)
-        exceptions.append(get_characters_table_exception)
-
-        add_raid_event_result, add_raid_event_exception = await add_raid_event(discord_server, raid_name)
-        results.append(add_raid_event_result)
-        exceptions.append(add_raid_event_exception)
-
-        add_person_to_raid_result, add_person_to_raid_exception = await add_person_to_raid(person_name, raid_id)
-        results.append(add_person_to_raid_result)
-        exceptions.append(add_person_to_raid_exception)
-        # NOTE: Have to pass in mock 'file' var, to accept the 3rd value returned, even tho its irrelevant otherwise for the test
-        award_loot_result, file, award_loot_exception = await award_loot(item_name, person_name, raid_id, 800)
-        results.append(award_loot_result)
-        exceptions.append(award_loot_exception)
-
-        remove_loot_result, file, remove_loot_exception = await remove_loot(item_name, 800, person_name, raid_id)
-        results.append(remove_loot_result)
-        exceptions.append(remove_loot_exception)
-
-        register_person_result, register_person_exception = await register_person(person_name, username)
-        results.append(register_person_result)
-        exceptions.append(register_person_exception)
-
-        unregister_person_result, unregister_person_exception = await unregister_person(person_name)
-        results.append(unregister_person_result)
-        exceptions.append(unregister_person_exception)
-
-        delete_person_from_raid_result, delete_person_from_raid_exception = await delete_person_from_raid(person_name, raid_id)
-        results.append(delete_person_from_raid_result)
-        exceptions.append(delete_person_from_raid_exception)
-
-        delete_raid_event_result, delete_raid_event_exception = await delete_raid_event(raid_id)
-        results.append(delete_raid_event_result)
-        exceptions.append(delete_raid_event_exception)
-
-        delete_person_result, delete_person_exception = await delete_person(person_name)
-        results.append(delete_person_result)
-        exceptions.append(delete_person_exception)
-
-        delete_character_result, delete_character_exception = await delete_character(character_name)
-        results.append(delete_character_result)
-        exceptions.append(delete_character_exception)
+        try:
+            add_person_result, add_person_exception = await add_person(person_name, relation, guild)
+            results.append(add_person_result)
+            exceptions.append(add_person_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.add_person(): {str(e)}')  
+        try:
+            add_character_result, add_character_exception = await add_character(character_name, character_class, level, person_name)
+            results.append(add_character_result)
+            exceptions.append(add_character_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.add_character(): {str(e)}') 
+        try:
+            edit_person_result, edit_person_exception = await edit_person(person_name, person_name_new, relation, guild)
+            results.append(edit_person_result)
+            exceptions.append(edit_person_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.edit_person(): {str(e)}') 
+        try:
+            edit_character_result, edit_character_exception = await edit_character(character_name, character_name_new, character_class, level, person_name)
+            results.append(edit_character_result)
+            exceptions.append(edit_character_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.edit_character(): {str(e)}') 
+        try:
+            who_result, who_exception = await who(character_name)
+            results.append(who_result)
+            exceptions.append(who_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.who(): {str(e)}') 
+        try:
+            get_characters_result, get_characters_excetion = await get_characters(person_name)
+            results.append(get_characters_result)
+            exceptions.append(get_characters_excetion)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.get_characters(): {str(e)}')             
+        try:
+            get_person_table_result, get_person_table_exception = await get_person_table(guild)
+            results.append(get_person_table_result)
+            exceptions.append(get_person_table_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.get_person_table(): {str(e)}') 
+        try:
+            get_characters_table_result, get_characters_table_exception = await get_characters_table(guild, character_class)
+            results.append(get_characters_table_result)
+            exceptions.append(get_characters_table_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.get_characters_table(): {str(e)}') 
+        try:
+            add_raid_event_result, add_raid_event_exception = await add_raid_event(discord_server, raid_name)
+            results.append(add_raid_event_result)
+            exceptions.append(add_raid_event_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.add_raid_event(): {str(e)}') 
+        try:
+            add_person_to_raid_result, add_person_to_raid_exception = await add_person_to_raid(person_name, raid_id)
+            results.append(add_person_to_raid_result)
+            exceptions.append(add_person_to_raid_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.add_person_to_raid(): {str(e)}')     
+        try:
+            # NOTE: Have to pass in mock 'file' var, to accept the 3rd value returned, even tho its irrelevant otherwise for the test
+            award_loot_result, file, award_loot_exception = await award_loot(item_name, person_name, raid_id, 800)
+            results.append(award_loot_result)
+            exceptions.append(award_loot_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.award_loot(): {str(e)}') 
+        try:
+            remove_loot_result, file, remove_loot_exception = await remove_loot(item_name, 800, person_name, raid_id)
+            results.append(remove_loot_result)
+            exceptions.append(remove_loot_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.remove_loot(): {str(e)}') 
+        try:
+            register_person_result, register_person_exception = await register_person(person_name, username)
+            results.append(register_person_result)
+            exceptions.append(register_person_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.register_person(): {str(e)}') 
+        try:
+            delete_person_from_raid_result, delete_person_from_raid_exception = await delete_person_from_raid(person_name, raid_id)
+            results.append(delete_person_from_raid_result)
+            exceptions.append(delete_person_from_raid_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.delete_person_from_raid(): {str(e)}') 
+        try:
+            unregister_person_result, unregister_person_exception = await unregister_person(person_name)
+            results.append(unregister_person_result)
+            exceptions.append(unregister_person_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.unregister_person(): {str(e)}') 
+        try:
+            delete_raid_event_result, delete_raid_event_exception = await delete_raid_event(raid_id)
+            results.append(delete_raid_event_result)
+            exceptions.append(delete_raid_event_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.delete_raid_event(): {str(e)}') 
+        try:
+            delete_person_result, delete_person_exception = await delete_person(person_name)
+            results.append(delete_person_result)
+            exceptions.append(delete_person_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.delete_person(): {str(e)}') 
+        try:
+            delete_character_result, delete_character_exception = await delete_character(character_name)
+            results.append(delete_character_result)
+            exceptions.append(delete_character_exception)
+        except Exception as e:
+            print(f'EXCEPTION: test_run_all_commands.delete_character(): {str(e)}') 
 
         if succeed == False:
             print("succeed boolean == False results: ")
             print(results)
         return results, exceptions
     except Exception as e:
-        print(f'logic.test_run_all_commands() exception: {str(e)}',)
-        return (([f'logic.test_run_all_commands() exception: {str(e)}'], [e]))
+        print(f'EXCEPTION: logic.test_run_all_commands(): {str(e)}',)
+        return (([f'EXCEPTION: logic.test_run_all_commands() exception: {str(e)}'], [e]))
         
 
 

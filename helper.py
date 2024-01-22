@@ -1,5 +1,6 @@
 import discord
 import data.config as config
+from data.config import table_flag
 from bot.bot_instance import bot
 from datetime import datetime
 import requests
@@ -96,12 +97,13 @@ def remove_loot_embed(item_name: str, icon_id: int, person_name: str, raid_name:
         embed.add_field(name='Person Name', value=person_name)
         embed.add_field(name='Raid ', value=raid_name)
         return [embed, file]
-
-def add_raid_embed(raid_name: str):
-    embed = discord.Embed(title='/add_raid_event', description='Character successfully added:', color=discord.Color.random())
+# NOTE: Need to pass channel member list to this embed
+def add_raid_embed(raid_name: str, raiders: list):
+    embed = discord.Embed(title='/add_raid_event', description='Raid event created:', color=discord.Color.random())
     embed.set_thumbnail(url=f'{config.froak_icon}')
     embed.add_field(name='Raid Name', value=raid_name)
     embed.add_field(name='Date', value=datetime.now().strftime("%m-%d-%Y"))
+    embed.add_field(name='Raiders', value=", ".join(raiders))
     return embed
 
 # Refactor 'most_populated_channel' to list, and allow user to pick
@@ -114,18 +116,20 @@ async def get_most_populated_channel(guild):
             member_count = len(channel.members)
             if member_count > max_members:
                 raiders = [member.global_name for member in channel.members]
+                usernames = [member.name for member in channel.members]
                 max_members = member_count
                 most_populated_channel = channel
 
     if most_populated_channel:
         print(f"The most populated voice channel is {most_populated_channel.name} with {len(most_populated_channel.members)} members.")
         print('Raiders: ', str(raiders))
-        return raiders
+        print('Usernames: ', str(usernames))
+        return [raiders, usernames]
     else:
         print("There are no members in any voice channels.")
-        return None
+        return [None, None]
     
-#NOTE: Unsure if error handling is correct
+# If person_name is None, we return all raid names (Possibly need to limit this eventually)
 async def fetch_raid_names(raid_name: str, person_name: str = None):
     try:
         raid_name = f'{raid_name}%'
@@ -134,9 +138,19 @@ async def fetch_raid_names(raid_name: str, person_name: str = None):
             person_name = f'{person_name}%'
             print('helper.fetch_raid_names() person_name NOT NULL:')
             print(f'helper.fetch_raid_names() person_name LIKE var: {person_name}')
-            c.execute('''SELECT * FROM raid_master_test a
-                         INNER JOIN dkp_test b ON a.raid_id = b.raid_id
-                         WHERE a.raid_name LIKE ? AND b.person_name LIKE ?''', (raid_name, person_name,))
+            # First, SELECT username FROM dkp a INNER JOIN person b ON a.username = b.username WHERE b.person LIKE ?
+            # c.execute(f'''SELECT * FROM raid_master{table_flag} a
+            #              INNER JOIN dkp{table_flag} b ON a.raid_id = b.raid_id
+            #              WHERE a.raid_name LIKE ? AND b.person_name LIKE ?''', (raid_name, person_name,))
+            
+            c.execute(f'''SELECT * FROM raid_master{table_flag} a
+                          INNER JOIN dkp{table_flag} b ON a.raid_id = b.raid_id
+                          WHERE b.username IN (
+                          SELECT p.username FROM person{table_flag} p INNER JOIN dkp{table_flag} d
+                          ON p.username = d.username 
+                          AND p.person_name LIKE ?
+                          )''', (person_name,))
+            
             bot.db_connection.commit()
             results = c.fetchall()
             print('helper.fetch_raid_names() 2')
@@ -150,11 +164,10 @@ async def fetch_raid_names(raid_name: str, person_name: str = None):
                 return None
         else:
             print('helper.fetch_raid_names() person_name IS NULL:')
-            c.execute('''SELECT * FROM raid_master_test WHERE raid_name LIKE ?''', (raid_name,))
+            c.execute(f'''SELECT * FROM raid_master{table_flag} WHERE raid_name LIKE ?''', (raid_name,))
             bot.db_connection.commit()
             results = c.fetchall()
             if results:
-                
                 results = [result for result in results]
                 return results
             else:
@@ -164,14 +177,14 @@ async def fetch_raid_names(raid_name: str, person_name: str = None):
     except Exception as e:
         print('EXCEPTION: helper.fetch_raid_names()', str(e))
         return None
-
+# NOTE: Refactor to fetch_person_names?
 async def fetch_raider_names(person_name: str):
     try:
         like_pattern = f'{person_name}%'
         conn = bot.db_connection
         c = conn.cursor()
-        c.execute('''
-                SELECT person_name FROM person_test WHERE relation = 1 AND person_name LIKE ?
+        c.execute(f'''
+                SELECT person_name FROM person{table_flag} WHERE relation = 1 AND person_name LIKE ?
                 ''', 
                 (like_pattern,))
         conn.commit()

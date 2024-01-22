@@ -17,10 +17,12 @@ def run_discord_bot():
         bot.db_connection = db.connection
         @bot.event
         async def on_ready():
-            
             #USE WITH CAUTION:
+            #db_functions.create_backup_timestamp_table(bot)
             # db_functions.reset_test_tables(bot)
             # db_functions.reset_tables(bot)
+            # db_functions.drop_backup_tables(bot)
+            # db_functions.backup_database(bot)
             print('Bot is Up and Ready!')
             try:
                 for command in bot_commands.slash_commands:

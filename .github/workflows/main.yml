@@ -20,6 +20,6 @@ jobs:
 
     - name: SSH into server and update
       run: |
-        ssh mike@45.55.129.24 -t "touch ~/test"
+        ssh mike@45.55.129.24 -t "./home/mike/froakbot/update.sh"
         
         

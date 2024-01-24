@@ -11,6 +11,7 @@ jobs:
 
     - name: Set up SSH
       run: |
+        pwd
         ls -la
         mkdir -p ~/.ssh/
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa

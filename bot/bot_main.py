@@ -7,7 +7,6 @@ from contextlib import contextmanager
 from bot.bot_instance import bot
 
 
-
 db_path = config.db_path
 TOKEN = env("BOT_TOKEN")
 

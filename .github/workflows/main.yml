@@ -11,14 +11,13 @@ jobs:
 
     - name: Set up SSH
       run: |
-        cd ~
-        pwd
-        ls -la
         mkdir -p ~/.ssh/
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        ls -la ~/.ssh/
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan 45.55.129.24 >> ~/.ssh/known_hosts
-        ls -la ~/.ssh/
+        ssh-keyscan 45.55.129.24 >> ~/.ssh/known_hosts  
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: SSH into server and update
+      run: |
+        ssh mike@y45.55.129.24 "sudo systemctl stop froakbot && cd /home/mike/projects/froakbot && git pull && sudo systemctl start froakbot"

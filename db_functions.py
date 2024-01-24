@@ -353,9 +353,9 @@ def reset_test_tables(bot: object):
             create_test_tables(bot)
             migrate_players_db_test(bot)
             migrate_characters_db_test(bot)
-            add_mock_rows_raid_master_test(bot)
-            add_mock_rows_dkp_test(bot)
-            mock_usernames_test(bot)
+            # add_mock_rows_raid_master_test(bot)
+            # add_mock_rows_dkp_test(bot)
+            # mock_usernames_test(bot)
         except Exception as e:
             exception  = f'db_functions.reset_test_tables(): {str(e)}'
             print(exception)
@@ -366,32 +366,23 @@ def reset_test_tables(bot: object):
 # Returns Boolean so that caller can decide to proceed with other calls
 def copy_paste_backup_database(bot: object) -> bool:
     try:
-        max_num = 0
         dir = './froak-db/'
-
-        for filename in os.listdir(dir):
-            if filename.startswith('master') and filename.endswith('.db'):
-                match = re.search(r'\d+', filename)
-                if match:
-                    num = int(match.group())
-                    max_num = max(max_num, num)
-        
-        new_num = max_num + 1
-        new_filename = f'master{new_num}.db'
+        timestamp = datetime.now().strftime("%m-%d-%Y %H:%M").replace(" ", '-')
+        new_filename = f'master{timestamp}.db'
         original_file = os.path.join(dir, 'master.db')
         new_file = os.path.join(dir, new_filename)
 
         with open(original_file, 'rb') as f_read:
             with open(new_file, 'wb') as f_write:
                 f_write.write(f_read.read())
-        
         print(f'Backup db file created: {new_filename}')
         return True
     except Exception as e:
         print(f'EXCEPTION: db_functions.copy_paste_backup_database(): {str(e)}')
         return False
 
-def backup_database(bot: object):
+# NOTE: Built this system to backup the database, but realized it makes more sense to merely copy and paste the current database file and save the filename with a timestamp.
+def backup_database_desecrated(bot: object):
     try:
         # Cannot include DROP and CREATE calls in a transaction, so we need to FIRST create the backup DB file before attempting to call this function.
         # That way, we have a safeguard in place.
@@ -539,12 +530,6 @@ def add_mock_rows_dkp_test(bot: object):
           ('deimos888', 11, 1),
           ('bodied3', 11, 1),
           ('afflictx', 11, 1),
-          ('therealdodger', 12, 1),
-          ('norrix455', 12, 1),
-          ('nocsucow', 12, 1),
-          ('deimos888', 12, 1),
-          ('bodied3', 12, 1),
-          ('afflictx', 12, 1),
       ]
       conn = bot.db_connection
       c = conn.cursor()

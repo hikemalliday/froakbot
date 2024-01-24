@@ -115,7 +115,7 @@ async def get_most_populated_channel(guild):
         if isinstance(channel, discord.VoiceChannel):
             member_count = len(channel.members)
             if member_count > max_members:
-                raiders = [member.global_name for member in channel.members]
+                raiders = [member.display_name for member in channel.members]
                 usernames = [member.name for member in channel.members]
                 max_members = member_count
                 most_populated_channel = channel

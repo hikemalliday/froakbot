@@ -611,16 +611,24 @@ async def add_raid_event(discord_server: object, raid_name: str) -> tuple:
     try:
         timestamp = datetime.now().strftime("%m-%d-%Y")
         raiders, usernames = await helper.get_most_populated_channel(discord_server)
+        
         if raiders is None:
             return ('❌ERROR: There are no members in any voice channels.', None)
+        print('raiders')
+        print(raiders)
         conn = bot.db_connection
         with conn:
             c = conn.cursor()
             c.execute(f'''INSERT INTO raid_master{table_flag} (raid_name, raid_date) VALUES (?, ?)''', (raid_name, timestamp))
             raid_id = c.lastrowid
             username_inserts = [(user, raid_id, 1) for user in usernames]
-            c.executemany(f'''INSERT INTO dkp{table_flag} (username, raid_id, dkp_points) VALUES (?, ?, ?)''', username_inserts)
+            for entry in username_inserts:
+                username = entry[0]
+                raid_id = entry[1]
+                dkp_points = entry[2]
+                c.execute(f'''INSERT INTO dkp{table_flag} (username, raid_id, dkp_points) VALUES (?, ?, ?)''', (username, raid_id, dkp_points))
             conn.commit()
+            # Add a 'skip' for None raiders inside helper.add_raid_event()
             embed = helper.add_raid_embed(raid_name, raiders)
         return (embed, None)
     except Exception as e:

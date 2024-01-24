@@ -20,4 +20,6 @@ jobs:
 
     - name: SSH into server and update
       run: |
-        ssh mike@45.55.129.24 "sudo systemctl stop froakbot && cd /home/mike/projects/froakbot && git pull && sudo systemctl start froakbot"
+        ssh mike@45.55.129.24 -t "touch ~/test"
+        
+        

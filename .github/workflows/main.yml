@@ -18,7 +18,7 @@ jobs:
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         ls -la ~/.ssh/
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan mike@45.55.129.24 >> ~/.ssh/known_hosts
+        ssh-keyscan 45.55.129.24 >> ~/.ssh/known_hosts
         ls -la ~/.ssh/
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}

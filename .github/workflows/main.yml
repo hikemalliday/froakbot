@@ -11,6 +11,7 @@ jobs:
 
     - name: Set up SSH
       run: |
+        cd ~
         pwd
         ls -la
         mkdir -p ~/.ssh/

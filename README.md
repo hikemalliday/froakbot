@@ -28,6 +28,8 @@ Also contains basic CRUD commands for search of character data.
 
 I created a GitHub Action (workflow YAML) that triggers on commit to master branch:
 
+The action  writes the SSH private key that I have stored in secrets to a text file 'id_rsa', changes the mode of said file to read and write, adds my server to known_hosts, then SSH login's to my server, and executes a shell script file the I made. The shell script file stops a linux 'service' (froakbot), runs 'git pull', then starts the 'service'.
+
 ![alt_text](https://cdn.discordapp.com/attachments/617825237752479751/1200078638004048022/image.png?ex=65c4df53&is=65b26a53&hm=724cc9e52f3d17844092ef24d699feb12ec44485dd56eca08e12136985729399&)
 
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.

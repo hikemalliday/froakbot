@@ -26,6 +26,10 @@ Also contains basic CRUD commands for search of character data.
 
 # Dev Notes:
 
+I created a GitHub Action (workflow YAML) that triggers on commit to master branch:
+
+![alt_text](https://cdn.discordapp.com/attachments/617825237752479751/1200078638004048022/image.png?ex=65c4df53&is=65b26a53&hm=724cc9e52f3d17844092ef24d699feb12ec44485dd56eca08e12136985729399&)
+
 I created a simple [website](https://github.com/hikemalliday/froakbot-website-frontend) that displays all of the discord bots output, in an endless scroll page.
 
 I created 'items_master' by copying a few columns from the Project Quarm items table, so that when awarding raid loot, when you input the item_name string, if spelled close enough, it will enter the correct spelling of the item into the database. This allows for standardized data that is more queryable. 'items_master' also contains a column called 'icon', which is a number that maps an item's in game image to an image file. I scraped all of the item image files from the P99 wiki, using my own [webscraper](https://github.com/hikemalliday/p99wiki-scraper), and the images are correctly mapped with the correct ID's. This will allow me to returnn a nice looking 'card' in Discord that will show a picture of the item when loot is awarded. 

@@ -10,6 +10,7 @@ from bot.bot_instance import bot
 db_path = config.db_path
 TOKEN = env("BOT_TOKEN")
 
+
 def run_discord_bot():
     db = DatabaseConnection(db_path)
     try:

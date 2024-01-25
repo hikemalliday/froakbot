@@ -28,7 +28,7 @@ Also contains basic CRUD commands for search of character data.
 
 I created a GitHub Action (workflow YAML) that triggers on commit to master branch:
 
-The action  writes the SSH private key that I have stored in secrets to a text file 'id_rsa', changes the mode of said file to read and write, adds my server to known_hosts, then SSH login's to my server, and executes a shell script file the I made. The shell script file stops a linux 'service' (froakbot), runs 'git pull', then starts the 'service'.
+The action writes the SSH private key that I have stored in secrets to a text file 'id_rsa'. This 'id_rsa' file is stored in the 'runner' for the workflow file, which to my best knowledge is either a container or a VM that is spun up on githubs server. We then change the mode of said file to read and write, append the return from 'ssh-keyscan <server ip>' to a text file called 'known_hosts'. Next, we SSH login to my server and execute a shell script file that stops a linux 'service' (froakbot), runs 'git pull', then starts the 'service'.
 
 ![alt_text](https://cdn.discordapp.com/attachments/617825237752479751/1200078638004048022/image.png?ex=65c4df53&is=65b26a53&hm=724cc9e52f3d17844092ef24d699feb12ec44485dd56eca08e12136985729399&)
 

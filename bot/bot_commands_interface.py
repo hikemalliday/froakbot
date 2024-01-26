@@ -3,6 +3,7 @@ import discord
 import bot.bot_commands_logic as logic
 from discord import app_commands
 import helper
+from data.config import test_mode
 selected_raid_id = None
 # Object to store autocomplete values for input fields
 current_inputs = {}
@@ -14,6 +15,9 @@ current_inputs = {}
 # 'bot_bommands_interface.py', still very useful though.
 @app_commands.command(name='test_run_all_commands')
 async def test_run_all_commands(interaction: discord.Interaction):
+    if test_mode == False:
+        print('data.config.test_mode == False, aborting interface.test_run_all_commands().')
+        return
     await interaction.response.defer()
     results, exceptions = await logic.test_run_all_commands(interaction.guild, True)
     for result in results:

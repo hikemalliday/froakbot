@@ -3,10 +3,8 @@ import mysql.connector
 from decouple import config as env
 from datetime import datetime
 import os
-import re
+from data.config import test_mode
  
-# The term 'test' in this module does not imply traditional unit or end to end tests, its for creating test tables that I can read / write
-
 def levenshtein_distance(string1, string2):
     return Levenshtein.distance(string1, string2)
 
@@ -60,20 +58,21 @@ def migrate_players_db(bot: object):
         exception = f'EXCEPTION: db_functions.migrate_players_db(): {str(e)}'
         print(exception)
         return exception
-# Not a 'test', this migrates the froakbotv1 players table into the current schema table
-def migrate_players_db_test(bot: object):
-    try:
-        c = bot.db_connection.cursor()
-        query = """INSERT INTO person_test (person_name, relation, guild)
-                SELECT player_name, relation, guild
-                FROM Players_db"""
-        c.execute(query)
-        bot.db_connection.commit()
-        print('Players_db to person migration complete!')
-    except Exception as e:
-        exception = f'EXCEPTION: db_functions.migrate_players_db(): {str(e)}'
-        print(exception)
-        return exception   
+
+# NOTE: Removing the concept of 'test' tables entirely. Refactoring to point to a different database file for dev, instead.
+# def migrate_players_db_test(bot: object):
+#     try:
+#         c = bot.db_connection.cursor()
+#         query = """INSERT INTO person_test (person_name, relation, guild)
+#                 SELECT player_name, relation, guild
+#                 FROM Players_db"""
+#         c.execute(query)
+#         bot.db_connection.commit()
+#         print('Players_db to person migration complete!')
+#     except Exception as e:
+#         exception = f'EXCEPTION: db_functions.migrate_players_db(): {str(e)}'
+#         print(exception)
+#         return exception   
 # Used to migrate the old tables into the new schema:
 def migrate_characters_db(bot: object):
     try:
@@ -89,19 +88,19 @@ def migrate_characters_db(bot: object):
         print(exception)
         return exception
 # Not a 'test', this migrates the froakbotv1 characters table into the current schema table
-def migrate_characters_db_test(bot: object):
-    try:
-        c = bot.db_connection.cursor()
-        query = """INSERT INTO character_test (char_name, char_class, person_name, level)
-                SELECT char_name, char_class, player_name, level
-                FROM Characters_db"""
-        c.execute(query)
-        bot.db_connection.commit()
-        print('Characters_db to character_test migration complete!')
-    except Exception as e:
-        exception = f'EXCEPTION: db_functions.migrate_characters_db_test: {str(e)}'
-        print(exception)
-        return exception
+# def migrate_characters_db_test(bot: object):
+#     try:
+#         c = bot.db_connection.cursor()
+#         query = """INSERT INTO character_test (char_name, char_class, person_name, level)
+#                 SELECT char_name, char_class, player_name, level
+#                 FROM Characters_db"""
+#         c.execute(query)
+#         bot.db_connection.commit()
+#         print('Characters_db to character_test migration complete!')
+#     except Exception as e:
+#         exception = f'EXCEPTION: db_functions.migrate_characters_db_test: {str(e)}'
+#         print(exception)
+#         return exception
 
 def create_tables(bot: object):
     sql_person_table = """CREATE Table IF NOT EXISTS person (
@@ -156,130 +155,130 @@ def create_tables(bot: object):
         exception = f'EXCEPTION: db_functions.create_tables(): {str(e)}'
         print(exception)
         return exception
+#NOTE: Removing the concept of backup tables. Instead, use the backup_database function, which copy pastes a database file and names with a timestamp.   
+# def create_backup_tables(bot: object):
+#     sql_person_table_backup = """CREATE Table IF NOT EXISTS person_backup (
+#                         person_name TEXT PRIMARY KEY,
+#                         relation INTEGER,
+#                         guild TEXT,
+#                         username TEXT UNIQUE
+#     )"""
+
+#     sql_character_table_backup = """CREATE Table IF NOT EXISTS character_backup (
+#                           char_name TEXT PRIMARY KEY,
+#                           char_class TEXT NOT NULL,
+#                           person_name text,
+#                           level INTEGER,
+#                           FOREIGN KEY (person_name) REFERENCES person(person_name)
+#     )"""
+
+#     sql_raid_master_table_backup = """CREATE Table IF NOT EXISTS raid_master_backup (
+#                             raid_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                             raid_name TEXT NOT NULL,
+#                             raid_date TEXT
+#     )"""
+
+#     sql_person_loot_table_backup = """CREATE Table IF NOT EXISTS person_loot_backup (
+#                             entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                             person_name TEXT,
+#                             item_name TEXT,
+#                             raid_id INTEGER,
+#                             FOREIGN KEY (person_name) REFERENCES person(person_name),
+#                             FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id)
+#     )"""
+
+#     sql_dkp_table_backup = """CREATE Table IF NOT EXISTS dkp_backup (
+#                     entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                     username TEXT,
+#                     raid_id INTEGER,
+#                     dkp_points INTEGER,
+#                     FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id),
+#                     UNIQUE(username, raid_id)
+#     )"""
+
+#     try:
+#         c = bot.db_connection.cursor()
+#         c.execute(sql_person_table_backup)
+#         c.execute(sql_character_table_backup)
+#         c.execute(sql_raid_master_table_backup)
+#         c.execute(sql_person_loot_table_backup)
+#         c.execute(sql_dkp_table_backup)
+#         bot.db_connection.commit()
+#         print('Backup tables created.')
+#     except Exception as e:
+#         exception = f'EXCEPTION: db_functions.create_backup_tables(): {str(e)}'
+#         print(exception)
+#         return exception
+# NOTE: Removing the concept of 'test' tables entirely. Refactoring to point to a different database file for dev, instead.
+# def create_test_tables(bot: object):
+#     sql_person_table_test = """CREATE Table IF NOT EXISTS person_test (
+#                         person_name TEXT PRIMARY KEY,
+#                         relation INTEGER,
+#                         guild TEXT,
+#                         username TEXT UNIQUE
+#     )"""
+
+#     sql_character_table_test = """CREATE Table IF NOT EXISTS character_test (
+#                           char_name TEXT PRIMARY KEY,
+#                           char_class TEXT NOT NULL,
+#                           person_name text,
+#                           level INTEGER,
+#                           FOREIGN KEY (person_name) REFERENCES person_test(person_name)
+#     )"""
+
+#     sql_raid_master_table_test = """CREATE Table IF NOT EXISTS raid_master_test (
+#                             raid_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                             raid_name TEXT NOT NULL,
+#                             raid_date TEXT
+#     )"""
+
+#     sql_person_loot_table_test = """CREATE Table IF NOT EXISTS person_loot_test (
+#                             entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                             person_name TEXT,
+#                             item_name TEXT,
+#                             raid_id INTEGER,
+#                             FOREIGN KEY (person_name) REFERENCES person_test(person_name),
+#                             FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id)
+#     )"""
+
+#     sql_dkp_table_test = """CREATE Table IF NOT EXISTS dkp_test (
+#                     entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                     username TEXT,
+#                     raid_id INTEGER,
+#                     dkp_points INTEGER,
+#                     FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id),
+#                     UNIQUE(username, raid_id)
+#     )"""
+
+#     try:
+#         c = bot.db_connection.cursor()
+#         c.execute(sql_person_table_test)
+#         c.execute(sql_character_table_test)
+#         c.execute(sql_raid_master_table_test)
+#         c.execute(sql_person_loot_table_test)
+#         c.execute(sql_dkp_table_test)
+#         bot.db_connection.commit()
+#         print('Test tables created.')
+#     except Exception as e:
+#         exception = f'create_test_tables.create_test_tables() {str(e)}:'
+#         print(exception)
+#         return exception
+
+# def create_backup_timestamp_table(bot: object):
+#     sql_backup_timestamp = """CREATE Table IF NOT EXISTS backup_timestamp (
+#                         entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                         date TEXT
+#     )"""
     
-def create_backup_tables(bot: object):
-    sql_person_table_backup = """CREATE Table IF NOT EXISTS person_backup (
-                        person_name TEXT PRIMARY KEY,
-                        relation INTEGER,
-                        guild TEXT,
-                        username TEXT UNIQUE
-    )"""
-
-    sql_character_table_backup = """CREATE Table IF NOT EXISTS character_backup (
-                          char_name TEXT PRIMARY KEY,
-                          char_class TEXT NOT NULL,
-                          person_name text,
-                          level INTEGER,
-                          FOREIGN KEY (person_name) REFERENCES person(person_name)
-    )"""
-
-    sql_raid_master_table_backup = """CREATE Table IF NOT EXISTS raid_master_backup (
-                            raid_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            raid_name TEXT NOT NULL,
-                            raid_date TEXT
-    )"""
-
-    sql_person_loot_table_backup = """CREATE Table IF NOT EXISTS person_loot_backup (
-                            entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            person_name TEXT,
-                            item_name TEXT,
-                            raid_id INTEGER,
-                            FOREIGN KEY (person_name) REFERENCES person(person_name),
-                            FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id)
-    )"""
-
-    sql_dkp_table_backup = """CREATE Table IF NOT EXISTS dkp_backup (
-                    entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT,
-                    raid_id INTEGER,
-                    dkp_points INTEGER,
-                    FOREIGN KEY (raid_id) REFERENCES raid_master(raid_id),
-                    UNIQUE(username, raid_id)
-    )"""
-
-    try:
-        c = bot.db_connection.cursor()
-        c.execute(sql_person_table_backup)
-        c.execute(sql_character_table_backup)
-        c.execute(sql_raid_master_table_backup)
-        c.execute(sql_person_loot_table_backup)
-        c.execute(sql_dkp_table_backup)
-        bot.db_connection.commit()
-        print('Backup tables created.')
-    except Exception as e:
-        exception = f'EXCEPTION: db_functions.create_backup_tables(): {str(e)}'
-        print(exception)
-        return exception
-
-def create_test_tables(bot: object):
-    sql_person_table_test = """CREATE Table IF NOT EXISTS person_test (
-                        person_name TEXT PRIMARY KEY,
-                        relation INTEGER,
-                        guild TEXT,
-                        username TEXT UNIQUE
-    )"""
-
-    sql_character_table_test = """CREATE Table IF NOT EXISTS character_test (
-                          char_name TEXT PRIMARY KEY,
-                          char_class TEXT NOT NULL,
-                          person_name text,
-                          level INTEGER,
-                          FOREIGN KEY (person_name) REFERENCES person_test(person_name)
-    )"""
-
-    sql_raid_master_table_test = """CREATE Table IF NOT EXISTS raid_master_test (
-                            raid_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            raid_name TEXT NOT NULL,
-                            raid_date TEXT
-    )"""
-
-    sql_person_loot_table_test = """CREATE Table IF NOT EXISTS person_loot_test (
-                            entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            person_name TEXT,
-                            item_name TEXT,
-                            raid_id INTEGER,
-                            FOREIGN KEY (person_name) REFERENCES person_test(person_name),
-                            FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id)
-    )"""
-
-    sql_dkp_table_test = """CREATE Table IF NOT EXISTS dkp_test (
-                    entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT,
-                    raid_id INTEGER,
-                    dkp_points INTEGER,
-                    FOREIGN KEY (raid_id) REFERENCES raid_master_test(raid_id),
-                    UNIQUE(username, raid_id)
-    )"""
-
-    try:
-        c = bot.db_connection.cursor()
-        c.execute(sql_person_table_test)
-        c.execute(sql_character_table_test)
-        c.execute(sql_raid_master_table_test)
-        c.execute(sql_person_loot_table_test)
-        c.execute(sql_dkp_table_test)
-        bot.db_connection.commit()
-        print('Test tables created.')
-    except Exception as e:
-        exception = f'create_test_tables.create_test_tables() {str(e)}:'
-        print(exception)
-        return exception
-
-def create_backup_timestamp_table(bot: object):
-    sql_backup_timestamp = """CREATE Table IF NOT EXISTS backup_timestamp (
-                        entry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        date TEXT
-    )"""
-    
-    try:
-        c = bot.db_connection.cursor()
-        c.execute(sql_backup_timestamp)
-        bot.db_connection.commit()
-        print('Timestamp table created.')
-    except Exception as e:
-        exception = f'create_test_tables.create_test_tables() {str(e)}:'
-        print(exception)
-        return exception
+#     try:
+#         c = bot.db_connection.cursor()
+#         c.execute(sql_backup_timestamp)
+#         bot.db_connection.commit()
+#         print('Timestamp table created.')
+#     except Exception as e:
+#         exception = f'create_test_tables.create_test_tables() {str(e)}:'
+#         print(exception)
+#         return exception
     
 def drop_tables(bot: object):
     try:
@@ -295,42 +294,46 @@ def drop_tables(bot: object):
         exception = f'EXCEPTION db_functions.drop_tables():  {str(e)}'
         print(exception)
         return exception
+# NOTE: Removing the concept of backup tables, instead 'backing up' with a copy pate of the DB file
+# def drop_backup_tables(bot: object):
+#     user_input = input("Are you sure you want to drop the backup tables? (y/n): ")
+#     if user_input.lower() == 'y':
+#         try:
+#             c = bot.db_connection.cursor()
+#             c.execute('''DROP TABLE person_backup;''')
+#             c.execute('''DROP TABLE person_loot_backup;''')
+#             c.execute('''DROP TABLE raid_master_backup;''')
+#             c.execute('''DROP TABLE character_backup;''')
+#             c.execute('''DROP TABLE dkp_backup;''')
+#             bot.db_connection.commit()
+#             print('Backup tables dropped.')
+#         except Exception as e:
+#             exception = f'EXCEPTION db_functions.drop_backup_tables():  {str(e)}'
+#             print(exception)
+#             return exception
+#     else:
+#         print('Backup tables dropped.')
+# NOTE: Removing the concept of 'test' tables entirely. Refactoring to point to a different database file for dev, instead.
+# def drop_test_tables(bot: object):
+#     try:
+#         c = bot.db_connection.cursor()
+#         c.execute('''DROP TABLE person_test;''')
+#         c.execute('''DROP TABLE person_loot_test;''')
+#         c.execute('''DROP TABLE raid_master_test;''')
+#         c.execute('''DROP TABLE character_test;''')
+#         c.execute('''DROP TABLE dkp_test;''')
+#         bot.db_connection.commit()
+#         print('Test tables dropped.')   
+#     except Exception as e:
+#         exception = f'EXCEPTION db_functions.drop_test_tables(): {str(e)}'
+#         print(exception)
+#         return exception
 
-def drop_backup_tables(bot: object):
-    user_input = input("Are you sure you want to drop the backup tables? (y/n): ")
-    if user_input.lower() == 'y':
-        try:
-            c = bot.db_connection.cursor()
-            c.execute('''DROP TABLE person_backup;''')
-            c.execute('''DROP TABLE person_loot_backup;''')
-            c.execute('''DROP TABLE raid_master_backup;''')
-            c.execute('''DROP TABLE character_backup;''')
-            c.execute('''DROP TABLE dkp_backup;''')
-            bot.db_connection.commit()
-            print('Backup tables dropped.')
-        except Exception as e:
-            exception = f'EXCEPTION db_functions.drop_backup_tables():  {str(e)}'
-            print(exception)
-            return exception
-    else:
-        print('Backup tables dropped.')
-    
-def drop_test_tables(bot: object):
-    try:
-        c = bot.db_connection.cursor()
-        c.execute('''DROP TABLE person_test;''')
-        c.execute('''DROP TABLE person_loot_test;''')
-        c.execute('''DROP TABLE raid_master_test;''')
-        c.execute('''DROP TABLE character_test;''')
-        c.execute('''DROP TABLE dkp_test;''')
-        bot.db_connection.commit()
-        print('Test tables dropped.')   
-    except Exception as e:
-        exception = f'EXCEPTION db_functions.drop_test_tables(): {str(e)}'
-        print(exception)
-        return exception
-
+# NOTE: Nuclear function, CAREFUL!
 def reset_tables(bot: object):
+    if test_mode == False:
+        print('data.config.test_mode == False, aborting "reset_tables()"')
+        return
     user_input = input("Are you sure you want to reset the tables? (y/n): ")
     if user_input.lower() == 'y':
         try:
@@ -345,23 +348,27 @@ def reset_tables(bot: object):
     else:
         print("Table reset cancelled.")
 
-def reset_test_tables(bot: object):
-    user_input = input("Are you sure you want to reset the test tables? (y/n): ")
-    if user_input.lower() == 'y':
-        try:
-            drop_test_tables(bot)
-            create_test_tables(bot)
-            migrate_players_db_test(bot)
-            migrate_characters_db_test(bot)
-            # add_mock_rows_raid_master_test(bot)
-            # add_mock_rows_dkp_test(bot)
-            # mock_usernames_test(bot)
-        except Exception as e:
-            exception  = f'db_functions.reset_test_tables(): {str(e)}'
-            print(exception)
-            return exception    
-    else:
-        print("Test table reset cancelled.")
+# NOTE: Removing the concept of 'test' tables entirely. Refactoring to point to a different database file for dev, instead.
+# def reset_test_tables(bot: object):
+#     if test_mode == False:
+#         print('data.config.test_mode == False, aborting "reset_test_tables()"')
+#         return
+#     user_input = input("Are you sure you want to reset the test tables? (y/n): ")
+#     if user_input.lower() == 'y':
+#         try:
+#             drop_test_tables(bot)
+#             create_test_tables(bot)
+#             migrate_players_db_test(bot)
+#             migrate_characters_db_test(bot)
+#             # add_mock_rows_raid_master_test(bot)
+#             # add_mock_rows_dkp_test(bot)
+#             # mock_usernames_test(bot)
+#         except Exception as e:
+#             exception  = f'db_functions.reset_test_tables(): {str(e)}'
+#             print(exception)
+#             return exception    
+#     else:
+#         print("Test table reset cancelled.")
 
 # Returns Boolean so that caller can decide to proceed with other calls
 def copy_paste_backup_database(bot: object) -> bool:
@@ -382,183 +389,183 @@ def copy_paste_backup_database(bot: object) -> bool:
         return False
 
 # NOTE: Built this system to backup the database, but realized it makes more sense to merely copy and paste the current database file and save the filename with a timestamp.
-def backup_database_desecrated(bot: object):
-    try:
-        # Cannot include DROP and CREATE calls in a transaction, so we need to FIRST create the backup DB file before attempting to call this function.
-        # That way, we have a safeguard in place.
-        success = copy_paste_backup_database(bot)
-        if success == False:
-            print(f'db_functions.copy_paste_backup_database returned False, too risky to proceed. Aborting backup.')
-            return
+# def backup_database_desecrated(bot: object):
+#     try:
+#         # Cannot include DROP and CREATE calls in a transaction, so we need to FIRST create the backup DB file before attempting to call this function.
+#         # That way, we have a safeguard in place.
+#         success = copy_paste_backup_database(bot)
+#         if success == False:
+#             print(f'db_functions.copy_paste_backup_database returned False, too risky to proceed. Aborting backup.')
+#             return
         
-        drop_backup_tables(bot)
-        create_backup_tables(bot)
+#         drop_backup_tables(bot)
+#         create_backup_tables(bot)
         
-        conn = bot.db_connection
-        with conn:
-            c = conn.cursor()
-            # Cannot wrap these in a commit
-            c.execute('''SELECT * FROM person''')
-            results = c.fetchall()
-            if results:
-                c.executemany('''INSERT INTO person_backup VALUES (?, ?, ?, ?)''', results)
-            else:
-                print(f'SELECT * FROM person failed, please revert to backup DB file and try again.')
-            c.execute('''SELECT * FROM character''')
-            results = c.fetchall()
-            if results:
-                c.executemany('''INSERT INTO character_backup VALUES (?, ?, ?, ?)''', results)
-            else:
-                print(f'SELECT * FROM character failed, please revert to backup DB file and try again.')
-            c.execute('''SELECT username, raid_id, dkp_points FROM dkp''')
-            results = c.fetchall()
-            if results:
-                c.executemany('''INSERT INTO dkp_backup (username, raid_id, dkp_points) VALUES (?, ?, ?)''', results)
-            else:
-                print(f'SELECT FROM dkp failed, please revert to backup DB file and try again.')
-            c.execute('''SELECT person_name, item_name, raid_id  FROM person_loot''') 
-            results = c.fetchall()
-            if results:
-                c.executemany('''INSERT INTO person_loot_backup (person_name, item_name, raid_id) VALUES (?, ?, ?)''', results)
-            else:
-                print(f'SELECT FROM person_loot failed, please revert to backup DB file and try again.')
-            c.execute('''SELECT raid_name, raid_date FROM raid_master''')
-            results = c.fetchall()
-            if results:
-                c.executemany('''INSERT INTO raid_master_backup VALUES (?, ?)''', results)
-            else:
-                print(f'SELECT FROM raid_master failed, please rever to backup DB file and try again.')
-            c.execute('''INSERT INTO backup_timestamp (date) VALUES (?)''', (datetime.now().strftime("%m-%d-%Y"),) )
-            conn.commit()
-        print('Database backup complete.')
-    except Exception as e:
-        exception = f'EXCEPTION: db_functions.backup_database(): {str(e)}'
-        print(exception)
-        return exception
+#         conn = bot.db_connection
+#         with conn:
+#             c = conn.cursor()
+#             # Cannot wrap these in a commit
+#             c.execute('''SELECT * FROM person''')
+#             results = c.fetchall()
+#             if results:
+#                 c.executemany('''INSERT INTO person_backup VALUES (?, ?, ?, ?)''', results)
+#             else:
+#                 print(f'SELECT * FROM person failed, please revert to backup DB file and try again.')
+#             c.execute('''SELECT * FROM character''')
+#             results = c.fetchall()
+#             if results:
+#                 c.executemany('''INSERT INTO character_backup VALUES (?, ?, ?, ?)''', results)
+#             else:
+#                 print(f'SELECT * FROM character failed, please revert to backup DB file and try again.')
+#             c.execute('''SELECT username, raid_id, dkp_points FROM dkp''')
+#             results = c.fetchall()
+#             if results:
+#                 c.executemany('''INSERT INTO dkp_backup (username, raid_id, dkp_points) VALUES (?, ?, ?)''', results)
+#             else:
+#                 print(f'SELECT FROM dkp failed, please revert to backup DB file and try again.')
+#             c.execute('''SELECT person_name, item_name, raid_id  FROM person_loot''') 
+#             results = c.fetchall()
+#             if results:
+#                 c.executemany('''INSERT INTO person_loot_backup (person_name, item_name, raid_id) VALUES (?, ?, ?)''', results)
+#             else:
+#                 print(f'SELECT FROM person_loot failed, please revert to backup DB file and try again.')
+#             c.execute('''SELECT raid_name, raid_date FROM raid_master''')
+#             results = c.fetchall()
+#             if results:
+#                 c.executemany('''INSERT INTO raid_master_backup VALUES (?, ?)''', results)
+#             else:
+#                 print(f'SELECT FROM raid_master failed, please rever to backup DB file and try again.')
+#             c.execute('''INSERT INTO backup_timestamp (date) VALUES (?)''', (datetime.now().strftime("%m-%d-%Y"),) )
+#             conn.commit()
+#         print('Database backup complete.')
+#     except Exception as e:
+#         exception = f'EXCEPTION: db_functions.backup_database(): {str(e)}'
+#         print(exception)
+#         return exception
 
-def add_mock_rows_raid_master_test(bot: object):
-    try:
-        date_time = datetime.now().strftime("%m-%d-%Y")
-        mock_rows = [
-            ("Veeshan's Peak", date_time),
-            ("Golems",  date_time),
-            ("Plane of Hate", date_time),
-            ("Plane of Sky", date_time),
-            ("Halls of Testing", date_time),
-            ("Klandicar", date_time),
-            ("Royals", date_time),
-            ("Veeshan's Peak", date_time),
-            ("Dracholiche", date_time),
-            ("Golems + Dracho", date_time),
-            ("Halls of Testing", date_time),
-                     ]
-        conn = bot.db_connection
-        c = conn.cursor()
-        c.executemany('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (mock_rows))
-        conn.commit()
-        print('add_mock_rows_raid_master_test() success.')
-    except Exception as e:
-        print('add_mock_rows_raid_master_test() error:' , str(e))
-        return e
+# def add_mock_rows_raid_master_test(bot: object):
+#     try:
+#         date_time = datetime.now().strftime("%m-%d-%Y")
+#         mock_rows = [
+#             ("Veeshan's Peak", date_time),
+#             ("Golems",  date_time),
+#             ("Plane of Hate", date_time),
+#             ("Plane of Sky", date_time),
+#             ("Halls of Testing", date_time),
+#             ("Klandicar", date_time),
+#             ("Royals", date_time),
+#             ("Veeshan's Peak", date_time),
+#             ("Dracholiche", date_time),
+#             ("Golems + Dracho", date_time),
+#             ("Halls of Testing", date_time),
+#                      ]
+#         conn = bot.db_connection
+#         c = conn.cursor()
+#         c.executemany('''INSERT INTO raid_master_test (raid_name, raid_date) VALUES (?, ?)''', (mock_rows))
+#         conn.commit()
+#         print('add_mock_rows_raid_master_test() success.')
+#     except Exception as e:
+#         print('add_mock_rows_raid_master_test() error:' , str(e))
+#         return e
 
-def add_mock_rows_dkp_test(bot: object):
-    try:
-      mock_rows = [
-          ('therealdodger', 1, 1),
-          ('norrix455', 1, 1),
-          ('nocsucow', 1, 1),
-          ('deimos888', 1, 1),
-          ('bodied3', 1, 1),
-          ('afflictx', 1, 1),
-          ('therealdodger', 2, 1),
-          ('norrix455', 2, 1),
-          ('nocsucow', 2, 1),
-          ('deimos888', 2, 1),
-          ('bodied3', 2, 1),
-          ('afflictx', 2, 1),
-          ('therealdodger', 3, 1),
-          ('norrix455', 3, 1),
-          ('nocsucow', 3, 1),
-          ('deimos888', 3, 1),
-          ('bodied3', 3, 1),
-          ('afflictx', 3, 1),
-          ('therealdodger', 4, 1),
-          ('norrix455', 4, 1),
-          ('nocsucow', 4, 1),
-          ('deimos888', 4, 1),
-          ('bodied3', 4, 1),
-          ('afflictx', 4, 1),
-          ('therealdodger', 5, 1),
-          ('norrix455', 5, 1),
-          ('nocsucow', 5, 1),
-          ('deimos888', 5, 1),
-          ('bodied3', 5, 1),
-          ('afflictx', 5, 1),
-          ('therealdodger', 6, 1),
-          ('norrix455', 6, 1),
-          ('nocsucow', 6, 1),
-          ('deimos888', 6, 1),
-          ('bodied3', 6, 1),
-          ('afflictx', 6, 1),
-          ('therealdodger', 7, 1),
-          ('norrix455', 7, 1),
-          ('nocsucow', 7, 1),
-          ('deimos888', 7, 1),
-          ('bodied3', 7, 1),
-          ('afflictx', 7, 1),
-          ('therealdodger', 8, 1),
-          ('norrix455', 8, 1),
-          ('nocsucow', 8, 1),
-          ('deimos888', 8, 1),
-          ('bodied3', 8, 1),
-          ('afflictx', 8, 1),
-          ('therealdodger', 9, 1),
-          ('norrix455', 9, 1),
-          ('nocsucow', 9, 1),
-          ('deimos888', 9, 1),
-          ('bodied3', 9, 1),
-          ('afflictx', 9, 1),
-          ('therealdodger', 10, 1),
-          ('norrix455', 10, 1),
-          ('nocsucow', 10, 1),
-          ('deimos888', 10, 1),
-          ('bodied3', 10, 1),
-          ('afflictx', 10, 1),
-          ('therealdodger', 11, 1),
-          ('norrix455', 11, 1),
-          ('nocsucow', 11, 1),
-          ('deimos888', 11, 1),
-          ('bodied3', 11, 1),
-          ('afflictx', 11, 1),
-      ]
-      conn = bot.db_connection
-      c = conn.cursor()
-      c.executemany('''INSERT INTO dkp_test (username, raid_id, dkp_points) VALUES (?, ?, ?)''', (mock_rows))
-      conn.commit()
-      print('add_mock_rows_dkp_test() success.')
-    except Exception as e:
-        exception = f'EXCEPTION: db_functions.add_mock_rows_dkp_test(): {str(e)}'
-        print(exception)
-        return exception
+# def add_mock_rows_dkp_test(bot: object):
+#     try:
+#       mock_rows = [
+#           ('therealdodger', 1, 1),
+#           ('norrix455', 1, 1),
+#           ('nocsucow', 1, 1),
+#           ('deimos888', 1, 1),
+#           ('bodied3', 1, 1),
+#           ('afflictx', 1, 1),
+#           ('therealdodger', 2, 1),
+#           ('norrix455', 2, 1),
+#           ('nocsucow', 2, 1),
+#           ('deimos888', 2, 1),
+#           ('bodied3', 2, 1),
+#           ('afflictx', 2, 1),
+#           ('therealdodger', 3, 1),
+#           ('norrix455', 3, 1),
+#           ('nocsucow', 3, 1),
+#           ('deimos888', 3, 1),
+#           ('bodied3', 3, 1),
+#           ('afflictx', 3, 1),
+#           ('therealdodger', 4, 1),
+#           ('norrix455', 4, 1),
+#           ('nocsucow', 4, 1),
+#           ('deimos888', 4, 1),
+#           ('bodied3', 4, 1),
+#           ('afflictx', 4, 1),
+#           ('therealdodger', 5, 1),
+#           ('norrix455', 5, 1),
+#           ('nocsucow', 5, 1),
+#           ('deimos888', 5, 1),
+#           ('bodied3', 5, 1),
+#           ('afflictx', 5, 1),
+#           ('therealdodger', 6, 1),
+#           ('norrix455', 6, 1),
+#           ('nocsucow', 6, 1),
+#           ('deimos888', 6, 1),
+#           ('bodied3', 6, 1),
+#           ('afflictx', 6, 1),
+#           ('therealdodger', 7, 1),
+#           ('norrix455', 7, 1),
+#           ('nocsucow', 7, 1),
+#           ('deimos888', 7, 1),
+#           ('bodied3', 7, 1),
+#           ('afflictx', 7, 1),
+#           ('therealdodger', 8, 1),
+#           ('norrix455', 8, 1),
+#           ('nocsucow', 8, 1),
+#           ('deimos888', 8, 1),
+#           ('bodied3', 8, 1),
+#           ('afflictx', 8, 1),
+#           ('therealdodger', 9, 1),
+#           ('norrix455', 9, 1),
+#           ('nocsucow', 9, 1),
+#           ('deimos888', 9, 1),
+#           ('bodied3', 9, 1),
+#           ('afflictx', 9, 1),
+#           ('therealdodger', 10, 1),
+#           ('norrix455', 10, 1),
+#           ('nocsucow', 10, 1),
+#           ('deimos888', 10, 1),
+#           ('bodied3', 10, 1),
+#           ('afflictx', 10, 1),
+#           ('therealdodger', 11, 1),
+#           ('norrix455', 11, 1),
+#           ('nocsucow', 11, 1),
+#           ('deimos888', 11, 1),
+#           ('bodied3', 11, 1),
+#           ('afflictx', 11, 1),
+#       ]
+#       conn = bot.db_connection
+#       c = conn.cursor()
+#       c.executemany('''INSERT INTO dkp_test (username, raid_id, dkp_points) VALUES (?, ?, ?)''', (mock_rows))
+#       conn.commit()
+#       print('add_mock_rows_dkp_test() success.')
+#     except Exception as e:
+#         exception = f'EXCEPTION: db_functions.add_mock_rows_dkp_test(): {str(e)}'
+#         print(exception)
+#         return exception
 
-def mock_usernames_test(bot: object):
-    try:
-        mock_usernames = [
-            ('afflictx','Afflictx'),
-            ('norrix455','Norrix'),
-            ('bodied3','Bodied'),
-            ('deimos888','Deimos'),
-            ('nocsucow','Nocsucow'),
-            ('therealdodger','Dodger'),
-            ('grixus.', 'Grixus')
-        ]
-        conn = bot.db_connection
-        c = conn.cursor()
-        for username, person_name in mock_usernames:
-            c.execute('UPDATE person_test SET username = ? WHERE person_name = ?', (username, person_name))
-        conn.commit()
-        print(f'db_functions.mock_register_usernames() success.')
-    except Exception as e:
-        exception = f'EXCEPTION: db_functions.mock_register_usernames: {str(e)}'
-        print(exception)
-        return exception
+# def mock_usernames_test(bot: object):
+#     try:
+#         mock_usernames = [
+#             ('afflictx','Afflictx'),
+#             ('norrix455','Norrix'),
+#             ('bodied3','Bodied'),
+#             ('deimos888','Deimos'),
+#             ('nocsucow','Nocsucow'),
+#             ('therealdodger','Dodger'),
+#             ('grixus.', 'Grixus')
+#         ]
+#         conn = bot.db_connection
+#         c = conn.cursor()
+#         for username, person_name in mock_usernames:
+#             c.execute('UPDATE person_test SET username = ? WHERE person_name = ?', (username, person_name))
+#         conn.commit()
+#         print(f'db_functions.mock_register_usernames() success.')
+#     except Exception as e:
+#         exception = f'EXCEPTION: db_functions.mock_register_usernames: {str(e)}'
+#         print(exception)
+#         return exception

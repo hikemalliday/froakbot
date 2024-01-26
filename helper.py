@@ -1,6 +1,6 @@
 import discord
 import data.config as config
-from data.config import table_flag
+
 from bot.bot_instance import bot
 from datetime import datetime
 import requests
@@ -143,10 +143,10 @@ async def fetch_raid_names(raid_name: str, person_name: str = None):
             #              INNER JOIN dkp{table_flag} b ON a.raid_id = b.raid_id
             #              WHERE a.raid_name LIKE ? AND b.person_name LIKE ?''', (raid_name, person_name,))
             
-            c.execute(f'''SELECT * FROM raid_master{table_flag} a
-                          INNER JOIN dkp{table_flag} b ON a.raid_id = b.raid_id
+            c.execute(f'''SELECT * FROM raid_master a
+                          INNER JOIN dkp b ON a.raid_id = b.raid_id
                           WHERE b.username IN (
-                          SELECT p.username FROM person{table_flag} p INNER JOIN dkp{table_flag} d
+                          SELECT p.username FROM person p INNER JOIN dkp d
                           ON p.username = d.username 
                           AND p.person_name LIKE ?
                           )''', (person_name,))
@@ -164,7 +164,7 @@ async def fetch_raid_names(raid_name: str, person_name: str = None):
                 return None
         else:
             print('helper.fetch_raid_names() person_name IS NULL:')
-            c.execute(f'''SELECT * FROM raid_master{table_flag} WHERE raid_name LIKE ?''', (raid_name,))
+            c.execute(f'''SELECT * FROM raid_master WHERE raid_name LIKE ?''', (raid_name,))
             bot.db_connection.commit()
             results = c.fetchall()
             if results:
@@ -184,7 +184,7 @@ async def fetch_raider_names(person_name: str):
         conn = bot.db_connection
         c = conn.cursor()
         c.execute(f'''
-                SELECT person_name FROM person{table_flag} WHERE relation = 1 AND person_name LIKE ?
+                SELECT person_name FROM person WHERE relation = 1 AND person_name LIKE ?
                 ''', 
                 (like_pattern,))
         conn.commit()

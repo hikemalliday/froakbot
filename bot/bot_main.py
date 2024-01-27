@@ -11,6 +11,7 @@ db_path = config.db_path
 TOKEN = env("BOT_TOKEN")
 exit_flag = False
 
+
 helper.intro_prompt()
    
 def run_discord_bot():

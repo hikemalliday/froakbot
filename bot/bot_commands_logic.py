@@ -1,5 +1,4 @@
-# V2 (clas commands API)
-#NOTE: We added test_mode to bypass printing embeds on the test runs, however we need to refactor to handle the embeds at interface.test_run_all_commands() to just deal with it as it should.
+# V2 (slash commands API)
 from data.char_classes import class_names, emojis
 from decouple import config as env
 from data.config import test_mode, tesseract
@@ -14,7 +13,6 @@ from bot.bot_instance import bot
 db_path = env('DB_PATH')
 url = env('URL')
 pytesseract.pytesseract.tesseract_cmd = tesseract
-
 
 async def add_person(person_name: str, relation: str, guild: str) -> tuple:
     try:
@@ -783,6 +781,44 @@ async def remove_loot(item_name: str, icon_id: int, person_name: str, raid_id: i
         exception = f'EXCEPTION: logic.remove_loot(): {e}'
         print(exception)
         return (exception, None, exception)
+
+# NOTE: Only returning 2 vals, because we have not yet created an embed
+async def get_loot(person_name: str) -> list:
+    try:
+        person_name = person_name.title()
+        conn = bot.db_connection
+        with conn:
+            c = conn.cursor()
+            c.execute(f'''SELECT person_name FROM person WHERE person_name = ?''', (person_name,))
+            result = c.fetchone()
+            if not result:
+                return (f'❌ERROR: Person {person_name} does not exist.', None, None)
+            c.execute(f'''SELECT person_name, item_name, raid_id FROM person_loot WHERE person_name = ?''', (person_name,))
+            results = c.fetchall()
+            # Need to take raid_ids and SELECT raid_name from raid_master
+            if not results:
+                print(f'❌ERROR: No loot found for {person_name}.')
+            loot_list = []
+            for result in results:
+                c.execute('''SELECT raid_name FROM raid_master WHERE raid_id = ?''', (result[2],))
+                raid_name = c.fetchone()
+                if not raid_name:
+                    print('❌ERROR: raid name not found')
+                    return
+                row = []
+                row.append(result[0])
+                row.append(result[1])
+                row.append(raid_name[0])
+                loot_list.append(row)
+            print(loot_list)
+            embed = await helper.get_loot_embed(person_name, loot_list)
+            return (embed, None)
+    except Exception as e:
+        exception = f'EXCEPTION: logic.get_loot(): {str(e)}'
+        print(exception)
+        return (exception, exception)
+
+                
 
 #NOTE: Refactor more Exception wrappers for each function call.
 async def test_run_all_commands(discord_server: object, succeed: bool) -> list:

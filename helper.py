@@ -1,6 +1,6 @@
 import discord
 import data.config as config
-
+import sys
 from bot.bot_instance import bot
 from datetime import datetime
 import requests
@@ -9,6 +9,33 @@ from decouple import config as env
 import db_functions
 db_path = env('DB_PATH')
 url = env('URL')
+
+def intro_prompt() -> str:
+    exit_flag = False
+
+    if config.server_side == False:
+        while exit_flag == False:
+            user_input = input('Bot is currently running in DEV / TEST mode. Do you want to continue? (y/n)')
+            if user_input.lower() == 'n':
+                print('You have selected "n". Goodbye.')
+                sys.exit()
+            if user_input.lower() != 'y':
+                print('Invalid input, please try again. (y/n)')
+                continue
+            return
+        
+    elif config.server_side == True:
+        while exit_flag == False:
+            user_input = input('Bot is currently running in PROD / SERVER-SIDE mode. Do you want to continue? (y/n)')
+            if user_input.lower() == 'n':
+                print('You have selected "n". Goodbye.')
+                sys.exit()
+            if user_input.lower() != 'y':
+                print('Invalid input, please try again. (y/n)')
+                continue
+            return
+
+        
 
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str, person_name: str) -> list:
     raid_names = await fetch_raid_names(current, person_name)
@@ -20,10 +47,17 @@ async def raid_name_autocompletion(interaction: discord.Interaction, current: st
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
     person_names = await fetch_raider_names(current)
     if person_names is None:
-        return ['ERROR: helper.add_person_to_raid.person_name_autocompletion(): no names found.']
+        return ['ERROR: helper.person_name_autocompletion(): no names found.']
     choices = [discord.app_commands.Choice(name=name, value=name) for name in person_names]
     return choices
 
+async def get_loot_embed(person_name: str, loot_list: list) -> object:
+    embed = discord.Embed(title='/get_loot', description=f'Loot for {person_name}:', color=discord.Color.random())
+    embed.set_thumbnail(url=f'{config.froak_icon}')
+    for row in loot_list:
+        embed.add_field(name='Item', value=row[1])
+        embed.add_field(name='Raid', value=row[2])
+    return embed
 # NOTE: Disabled temporarily
 def send_message_to_website(message: dict=None, image_url=None):
     return
@@ -105,7 +139,6 @@ def add_raid_embed(raid_name: str, raiders: list):
     embed.add_field(name='Date', value=datetime.now().strftime("%m-%d-%Y"))
     embed.add_field(name='Raiders', value=", ".join(raiders))
     return embed
-
 # Refactor 'most_populated_channel' to list, and allow user to pick
 async def get_most_populated_channel(guild):
     max_members = 0
@@ -128,8 +161,8 @@ async def get_most_populated_channel(guild):
     else:
         print("There are no members in any voice channels.")
         return [None, None]
-    
-# If person_name is None, we return all raid names (Possibly need to limit this eventually)
+    # If person_name is None, we return all raid names (Possibly need to limit this eventually)
+
 async def fetch_raid_names(raid_name: str, person_name: str = None):
     try:
         raid_name = f'{raid_name}%'
@@ -177,6 +210,7 @@ async def fetch_raid_names(raid_name: str, person_name: str = None):
     except Exception as e:
         print('EXCEPTION: helper.fetch_raid_names()', str(e))
         return None
+
 # NOTE: Refactor to fetch_person_names?
 async def fetch_raider_names(person_name: str):
     try:
@@ -195,12 +229,11 @@ async def fetch_raider_names(person_name: str):
             results = [result[0] for result in results]
             return results
         else:
-            print('No names found for that raid.')
+            print('No names found for that raider.')
             return None
     except Exception as e:
         print('fetch_raider_names() error:', str(e))
         return str(e)
-
 # Possibly refactor first condition to = instead of LIKE
 # Possibly not the best practice for error handling, we are returning 'Couldnt find item' string , and searching substring at the caller level, perhaps try to return some sort of exception instead of string
 # ^^ Or, return empty string or None instead of 'Couldnt find item' string

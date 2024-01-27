@@ -271,6 +271,19 @@ async def unregister_person(interaction: discord.Interaction, person_name: str):
 async def person_name_autocompletion(interaction: discord.Interaction, current: str):
     return await helper.person_name_autocompletion(interaction, current)
 
+@app_commands.command(name='get_loot')
+@app_commands.describe(person_name='Enter person')
+async def get_loot(interaction: discord.Interaction, person_name: str):
+        results, exception = await logic.get_loot(person_name)
+        if type(results) == str:
+            await interaction.response.send_message(results)
+        else:
+            await interaction.response.send_message(embed=results)
+
+@register_person.autocomplete('person_name')
+async def person_name_autocompletion(interaction: discord.Interaction, current: str):
+    return await helper.person_name_autocompletion(interaction, current)
+
 slash_commands = [
     add_person, 
     add_character, 
@@ -290,5 +303,6 @@ slash_commands = [
     remove_loot,
     register_person,
     unregister_person,
-    test_run_all_commands
+    test_run_all_commands,
+    get_loot
     ]

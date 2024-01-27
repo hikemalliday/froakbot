@@ -5,12 +5,14 @@ import  bot.bot_commands_interface as bot_commands
 from db_connection import DatabaseConnection
 from contextlib import contextmanager
 from bot.bot_instance import bot
-import db_functions
+import helper
 
 db_path = config.db_path
 TOKEN = env("BOT_TOKEN")
+exit_flag = False
 
-
+helper.intro_prompt()
+   
 def run_discord_bot():
     db = DatabaseConnection(db_path)
     try:
@@ -18,7 +20,6 @@ def run_discord_bot():
         bot.db_connection = db.connection
         @bot.event
         async def on_ready():
-            print('Bot is Up and Ready!')
             try:
                 for command in bot_commands.slash_commands:
                     bot.tree.add_command(command)

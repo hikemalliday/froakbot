@@ -23,20 +23,9 @@ def intro_prompt() -> str:
                 print('Invalid input, please try again. (y/n)')
                 continue
             return
-        
     elif config.server_side == True:
-        while exit_flag == False:
-            user_input = input('Bot is currently running in PROD / SERVER-SIDE mode. Do you want to continue? (y/n)')
-            if user_input.lower() == 'n':
-                print('You have selected "n". Goodbye.')
-                sys.exit()
-            if user_input.lower() != 'y':
-                print('Invalid input, please try again. (y/n)')
-                continue
-            return
-
-        
-
+        print('Bot is currently running in PROD / SERVER-SIDE mode.')
+       
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str, person_name: str) -> list:
     raid_names = await fetch_raid_names(current, person_name)
     if raid_names is None:
@@ -164,18 +153,13 @@ async def get_most_populated_channel(guild):
     # If person_name is None, we return all raid names (Possibly need to limit this eventually)
 
 async def fetch_raid_names(raid_name: str, person_name: str = None):
+   #NOTE: Exceptions return None, because caller expects None on failure
     try:
         raid_name = f'{raid_name}%'
         c = bot.db_connection.cursor()
         if person_name:
-            person_name = f'{person_name}%'
             print('helper.fetch_raid_names() person_name NOT NULL:')
-            print(f'helper.fetch_raid_names() person_name LIKE var: {person_name}')
-            # First, SELECT username FROM dkp a INNER JOIN person b ON a.username = b.username WHERE b.person LIKE ?
-            # c.execute(f'''SELECT * FROM raid_master{table_flag} a
-            #              INNER JOIN dkp{table_flag} b ON a.raid_id = b.raid_id
-            #              WHERE a.raid_name LIKE ? AND b.person_name LIKE ?''', (raid_name, person_name,))
-            
+            person_name = f'{person_name}%'
             c.execute(f'''SELECT * FROM raid_master a
                           INNER JOIN dkp b ON a.raid_id = b.raid_id
                           WHERE b.username IN (
@@ -183,18 +167,26 @@ async def fetch_raid_names(raid_name: str, person_name: str = None):
                           ON p.username = d.username 
                           AND p.person_name LIKE ?
                           )''', (person_name,))
-            
             bot.db_connection.commit()
             results = c.fetchall()
-            print('helper.fetch_raid_names() 2')
-            print(f'helper.fetch_raid_names() results: {results}')
             if results:
-                print('helper.fetch_raid_names() 3')
                 results = [result for result in results]
                 return results
             else:
                 print('No results found (helper.fetch_raid_names)')
                 return None
+            
+        elif person_name is None and raid_name is None:
+            print('helper.fetch_raid_names() person_name AND raid_name are None:')
+            c.execute(f'''SELECT * FROM raid_master ORDER BY DESC LIMIT 10''')
+            results = c.fetchall()
+            if results:
+                results = [result for result in results]
+                return results
+            else:
+                print('No results found (fetch_raid_names)')
+                return None
+            
         else:
             print('helper.fetch_raid_names() person_name IS NULL:')
             c.execute(f'''SELECT * FROM raid_master WHERE raid_name LIKE ?''', (raid_name,))
@@ -206,9 +198,10 @@ async def fetch_raid_names(raid_name: str, person_name: str = None):
             else:
                 print('No results found (fetch_raid_names)')
                 return None
-    #NOTE: Why are we returning None instead of exception?
+    
     except Exception as e:
-        print('EXCEPTION: helper.fetch_raid_names()', str(e))
+        exception = f'EXCEPTION: helper.fetch_raid_names(): {str(e)}'
+        print(exception)
         return None
 
 # NOTE: Refactor to fetch_person_names?

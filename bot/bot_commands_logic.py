@@ -634,6 +634,64 @@ async def add_raid_event(discord_server: object, raid_name: str) -> tuple:
         print(error_message)
         return (error_message, error_message)
 
+async def get_all_raids(person_name: str) -> tuple:
+    try:
+        conn = bot.db_connection
+        with conn:
+            c = conn.cursor()
+            if person_name:
+                person_name = person_name.title()
+                c.execute(f'''SELECT person_name FROM person WHERE person_name = ?''', (person_name,))
+                result = c.fetchone()
+                if not result:
+                    return (f'❌ERROR: Person {person_name} does not exist.', None)
+                c.execute(f'''SELECT rm.*
+                            FROM raid_master rm
+                            JOIN dkp d ON rm.raid_id = d.raid_id
+                            JOIN person p ON d.username = p.username
+                            WHERE p.person_name = ?''', (person_name,))
+                results = c.fetchall()
+                print(f'RESULTS: {person_name}: {str(results)}')
+                if not results:
+                    return (f'❌ERROR: Person no raids found for person: {str(person_name)}.', None)
+                embed = helper.get_raids_embed(results, person_name)
+                return (embed, None)
+            else:
+                c.execute('''SELECT * FROM raid_master''')
+                results = c.fetchall()
+                if not results:
+                    return (f'❌ERROR: No raids found.', None)
+                embed = helper.get_raids_embed(results)
+                return (embed, None)
+    except Exception as e:
+        exception = f'EXCEPTION: helper.get_all_raids(): {str(e)}'
+        return (exception, exception)
+
+async def get_raid(raid_id: int)  -> tuple:
+    try:
+        conn = bot.db_connection
+        with conn:
+            print('test1')
+            c = conn.cursor()
+            c.execute(f'''SELECT a.raid_name, a.raid_date, b.username 
+                      FROM raid_master a 
+                      INNER JOIN dkp b
+                      ON a.raid_id = b.raid_id
+                      WHERE a.raid_id = ?
+                      ''', (raid_id,))
+            results = c.fetchall()
+            print('test2')
+            print(f'Results: {results}')
+            if not results:
+                return (f'❌ERROR: Person raid found for ID: {str(raid_id)}.', None)
+            embed = helper.get_raid_embed(results)
+            if embed:
+                return (embed, None)
+    except Exception as e:
+        exception = f'EXCEPTION: helper.get_raid(): {str(e)}'
+        print(exception)
+        return (exception, exception)
+
 async def delete_raid_event(raid_id: int) -> tuple:
     try:
         conn = bot.db_connection
@@ -792,7 +850,7 @@ async def get_loot(person_name: str) -> list:
             c.execute(f'''SELECT person_name FROM person WHERE person_name = ?''', (person_name,))
             result = c.fetchone()
             if not result:
-                return (f'❌ERROR: Person {person_name} does not exist.', None, None)
+                return (f'❌ERROR: Person {person_name} does not exist.', None)
             c.execute(f'''SELECT person_name, item_name, raid_id FROM person_loot WHERE person_name = ?''', (person_name,))
             results = c.fetchall()
             # Need to take raid_ids and SELECT raid_name from raid_master
@@ -817,8 +875,6 @@ async def get_loot(person_name: str) -> list:
         exception = f'EXCEPTION: logic.get_loot(): {str(e)}'
         print(exception)
         return (exception, exception)
-
-                
 
 #NOTE: Refactor more Exception wrappers for each function call.
 async def test_run_all_commands(discord_server: object, succeed: bool) -> list:

@@ -25,7 +25,14 @@ def intro_prompt() -> str:
             return
     elif config.server_side == True:
         print('Bot is currently running in PROD / SERVER-SIDE mode.')
-       
+
+def grant_access(roles: list, allowed_roles: list) -> bool:
+    found = False
+    for role in roles:
+        if role.name in allowed_roles:
+            found = True
+    return found
+
 async def raid_name_autocompletion(interaction: discord.Interaction, current: str, person_name: str) -> list:
     raid_names = await fetch_raid_names(current, person_name)
     if raid_names is None:
@@ -128,6 +135,26 @@ def add_raid_embed(raid_name: str, raiders: list):
     embed.add_field(name='Date', value=datetime.now().strftime("%m-%d-%Y"))
     embed.add_field(name='Raiders', value=", ".join(raiders))
     return embed
+
+def get_raids_embed(raids: list, person_name: str = None) -> list:
+    embed = discord.Embed(title='/get_all_raids', description=person_name, color=discord.Color.random())
+    embed.set_thumbnail(url=f'{config.froak_icon}')
+    for raid in raids:
+        embed.add_field(name='Raid', value=raid[1])
+        embed.add_field(name='Date', value=raid[2])
+        embed.add_field(name='ID', value=raid[0])
+    return embed
+
+def get_raid_embed(raid: list) -> list:
+    raid_name = raid[0][0]
+    raid_date = raid[0][1]
+    embed = discord.Embed(title='/get_raid', description=f'{raid_name}, {raid_date}', color=discord.Color.random())
+    embed.set_thumbnail(url=f'{config.froak_icon}')
+    for row in raid:
+        username = row[2]
+        embed.add_field(name='', value=username)
+    return embed
+
 # Refactor 'most_populated_channel' to list, and allow user to pick
 async def get_most_populated_channel(guild):
     max_members = 0

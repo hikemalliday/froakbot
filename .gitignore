@@ -14,5 +14,6 @@ database-revamp.py
 database_connection.py
 /Tesseract-OCR
 test-workflow.yaml
+*.bat
 
 update.sh

@@ -447,7 +447,6 @@ async def get_loot_error(interaction: discord.Interaction, error):
         print(f'EXCEPTION: interaface.get_loot(): {str(error)}')
         await interaction.response.send_message(f'❌ERROR: You are missing at least one of the required roles: {error.missing_roles}')
 
-
 slash_commands = [
     add_person, 
     add_character, 

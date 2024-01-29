@@ -18,6 +18,7 @@ current_inputs = {}
 #NOTE: KEep commented out until we want to actually use it
 
 @app_commands.command(name='test_run_all_commands')
+@app_commands.checks.has_any_role('Brain Trust')
 async def test_run_all_commands(interaction: discord.Interaction):
     if test_mode == False:
         print('data.config.test_mode == False, aborting interface.test_run_all_commands().')
@@ -42,6 +43,11 @@ async def test_run_all_commands(interaction: discord.Interaction):
         print('bot_commands_interface.run_all_commands:')
         print('✅No undesired exceptions found.')
         await interaction.followup.send(f'✅bot_commands_interface.run_all_commands: No undesired exceptions found.')
+@test_run_all_commands.error
+async def test_run_all_commands_error(interaction: discord.Interaction, error):
+    if isinstance(error, MissingAnyRole):
+        print(f'EXCEPTION: interaface.test_run_all_commands(): {str(error)}')
+        await interaction.response.send_message(f'❌ERROR: You are missing at least one of the required roles: {error.missing_roles}')
 
 @app_commands.command(name='add_person')
 @app_commands.describe(person_name='Enter a person name', relation='Enter relation status', guild='Enter a guild')

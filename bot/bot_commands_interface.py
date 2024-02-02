@@ -471,7 +471,7 @@ slash_commands = [
     remove_loot,
     register_person,
     unregister_person,
-    test_run_all_commands,
+    #test_run_all_commands,
     get_loot,
     get_all_raids,
     get_raid

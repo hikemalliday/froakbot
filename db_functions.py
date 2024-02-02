@@ -11,6 +11,48 @@ def levenshtein_distance(string1, string2):
 def create_levenshtein_function(bot: object):
     bot.db_connection.create_function("levenshtein", 2, levenshtein_distance)
 
+#NOTE: I will be re-vamping the website, and using the same database path + file for both apps, so I am running test queries here.
+def test_select_all_chars(bot: object, filters: list = []):
+    allowed_column_names = ['b.guild', 'a.char_class', 'a.person_name']
+    try:
+        c = bot.db_connection.cursor()
+        starting_query = '''SELECT * FROM character a
+                     INNER JOIN person b
+                     ON a.person_name = b.person_name'''
+        
+        filters = [
+            ['b.guild','Tempest'],
+			# ['a.char_class','Cleric'],
+            ['a.person_name', 'Grixus'],
+            ]
+        
+        parameters_list = []
+        if filters:
+            for filter in filters:
+                if filter[0] in allowed_column_names:
+                    if filter == filters[0]:
+                        concat = starting_query + f''' WHERE {filter[0]} = ?'''
+                        parameters_list.append(filter[1])
+                    else:
+                        concat += f''' AND {filter[0]} = ?'''
+                        parameters_list.append(filter[1])
+                else:
+                    error_message = f'ERROR: Invalid column name "{filter[0]}" passed for filter[0]. Aborting query.'
+                    print(error_message)
+                    return error_message
+        else:
+            concat = starting_query
+        print(f'concat: {concat}')
+        c.execute(concat, tuple(parameters_list))
+        results = c.fetchall()
+        if not results:
+            print(f'No results found for that query.')
+        else:
+            print(f'test_select_all_chars: {str(results)}')
+    except Exception as e:
+        exception  = f'EXCEPTION: db_functions.test_select_all_chars(): {str(e)}'
+        print(exception)
+
 # Created from the Project Quarm items database.
 def create_items_master_table(bot: object):
     try:

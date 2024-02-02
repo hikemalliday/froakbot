@@ -249,7 +249,7 @@ async def who(character_name: str) -> tuple:
         results = c.fetchone()
 
         if results is None:
-            message = f'```✅Character "{character_name}" doesnt exist in "character" table```'
+            message = f'```❌ERROR: Character "{character_name}" doesnt exist in "character" table```'
             helper.send_message_to_website(message)
             return (message, None)
         char_class = results[1]

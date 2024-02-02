@@ -16,42 +16,41 @@ current_inputs = {}
 # 'bot_bommands_interface.py', still very useful though.
 
 #NOTE: KEep commented out until we want to actually use it
+# @app_commands.command(name='test_run_all_commands')
+# @app_commands.checks.has_any_role('Brain Trust')
+# async def test_run_all_commands(interaction: discord.Interaction):
+#     if test_mode == False:
+#         print('data.config.test_mode == False, aborting interface.test_run_all_commands().')
+#         return
+#     await interaction.response.defer()
+#     results, exceptions = await logic.test_run_all_commands(interaction.guild, True)
+#     for result in results:
+#         if len(result) > 1994:
+#             await helper.print_large_message(interaction, result)
+#         else:
+#             if type(result) == str:
+#                 await interaction.followup.send(result)
+#             else:
+#                 await interaction.followup.send(embed=result)
 
-@app_commands.command(name='test_run_all_commands')
-@app_commands.checks.has_any_role('Brain Trust')
-async def test_run_all_commands(interaction: discord.Interaction):
-    if test_mode == False:
-        print('data.config.test_mode == False, aborting interface.test_run_all_commands().')
-        return
-    await interaction.response.defer()
-    results, exceptions = await logic.test_run_all_commands(interaction.guild, True)
-    for result in results:
-        if len(result) > 1994:
-            await helper.print_large_message(interaction, result)
-        else:
-            if type(result) == str:
-                await interaction.followup.send(result)
-            else:
-                await interaction.followup.send(embed=result)
-
-    for exception in exceptions:
-        if exception:
-            print(exception)
-            await interaction.followup.send(exception)
+#     for exception in exceptions:
+#         if exception:
+#             print(exception)
+#             await interaction.followup.send(exception)
     
-    if all(exception is None for exception in exceptions):
-        print('bot_commands_interface.run_all_commands:')
-        print('✅No undesired exceptions found.')
-        await interaction.followup.send(f'✅bot_commands_interface.run_all_commands: No undesired exceptions found.')
-@test_run_all_commands.error
-async def test_run_all_commands_error(interaction: discord.Interaction, error):
-    if isinstance(error, MissingAnyRole):
-        print(f'EXCEPTION: interaface.test_run_all_commands(): {str(error)}')
-        await interaction.response.send_message(f'❌ERROR: You are missing at least one of the required roles: {error.missing_roles}')
+#     if all(exception is None for exception in exceptions):
+#         print('bot_commands_interface.run_all_commands:')
+#         print('✅No undesired exceptions found.')
+#         await interaction.followup.send(f'✅bot_commands_interface.run_all_commands: No undesired exceptions found.')
+# @test_run_all_commands.error
+# async def test_run_all_commands_error(interaction: discord.Interaction, error):
+#     if isinstance(error, MissingAnyRole):
+#         print(f'EXCEPTION: interaface.test_run_all_commands(): {str(error)}')
+#         await interaction.response.send_message(f'❌ERROR: You are missing at least one of the required roles: {error.missing_roles}')
 
 @app_commands.command(name='add_person')
 @app_commands.describe(person_name='Enter a person name', relation='Enter relation status', guild='Enter a guild')
-@app_commands.checks.has_any_role('Brain Trust')
+@app_commands.checks.has_any_role('Brain Trust', 'Members')
 async def add_person(interaction: discord.Interaction, person_name: str, relation: str, guild: str):
         results, exception = await logic.add_person(person_name, relation, guild)
         if type(results) == str:
@@ -66,7 +65,7 @@ async def add_person_error(interaction: discord.Interaction, error):
 
 @app_commands.command(name='add_character')
 @app_commands.describe(character_name='Enter a character name', character_class='Enter a character class', level='Enter level', person_name='Enter a person name')
-@app_commands.checks.has_any_role('Brain Trust')
+@app_commands.checks.has_any_role('Brain Trust', 'Members')
 async def add_character(interaction: discord.Interaction, character_name: str, character_class: str, level: int,  person_name: str):
     results, exception = await logic.add_character(character_name, character_class, level, person_name)
     if type(results) == str:
@@ -81,7 +80,7 @@ async def add_character_error(interaction: discord.Interaction, error):
 
 @app_commands.command(name='delete_person')
 @app_commands.describe(person_name='Enter a person name')
-@app_commands.checks.has_any_role('Brain Trust')
+@app_commands.checks.has_any_role('Brain Trust', 'Members')
 async def delete_person(interaction: discord.Interaction, person_name: str):
     results, exception = await logic.delete_person(person_name)
     await interaction.response.send_message(results)
@@ -93,7 +92,7 @@ async def delete_person_error(interaction: discord.Interaction, error):
 
 @app_commands.command(name='delete_character')
 @app_commands.describe(character_name='Enter a character name')
-@app_commands.checks.has_any_role('Brain Trust')
+@app_commands.checks.has_any_role('Brain Trust', 'Members')
 async def delete_character(interaction: discord.Interaction, character_name: str):
     results, exception = await logic.delete_character(character_name)
     await interaction.response.send_message(results)
@@ -106,7 +105,7 @@ async def delete_character_error(interaction: discord.Interaction, error):
 
 @app_commands.command(name='edit_person')
 @app_commands.describe(person_name='Enter a person name', person_name_new='Enter new person name', relation='Enter relation status', guild='Enter a guild')
-@app_commands.checks.has_any_role('Brain Trust')
+@app_commands.checks.has_any_role('Brain Trust', 'Members')
 async def edit_person(interaction: discord.Interaction, person_name: str, person_name_new: str, relation: str, guild: str):
     results, exception = await logic.edit_person(person_name, person_name_new, relation, guild)
     await interaction.response.send_message(results)
@@ -118,7 +117,7 @@ async def edit_person_error(interaction: discord.Interaction, error):
 
 @app_commands.command(name='edit_character')
 @app_commands.describe(character_name='Enter a character name', character_name_new='Enter new character name', character_class='Enter a character class', level='Enter level', person_name='Enter a person name')
-@app_commands.checks.has_any_role('Brain Trust')
+@app_commands.checks.has_any_role('Brain Trust', 'Members')
 async def edit_character(interaction: discord.Interaction, character_name: str, character_name_new: str, character_class: str, level: int, person_name: str):
     results, exception = await logic.edit_character(character_name, character_name_new, character_class, level, person_name)
     await interaction.response.send_message(results)

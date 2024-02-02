@@ -6,11 +6,11 @@ from db_connection import DatabaseConnection
 from contextlib import contextmanager
 from bot.bot_instance import bot
 import helper
+import db_functions
 
 db_path = config.db_path
 TOKEN = env("BOT_TOKEN")
 exit_flag = False
-
 
 helper.intro_prompt()
    
@@ -22,6 +22,7 @@ def run_discord_bot():
         @bot.event
         async def on_ready():
             try:
+                db_functions.test_select_all_chars(bot)
                 for command in bot_commands.slash_commands:
                     bot.tree.add_command(command)
                     print(f'Adding command: {command.name}')

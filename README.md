@@ -1,3 +1,5 @@
+## NOTE: No longer active
+
 # froakbot
 ###### A Discord bot for Everquest (an MMORPG)
 
